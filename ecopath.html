@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoPath AI - Пълна Версия</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+    
+    <style>
+        :root { --eco-green: #2d6a4f; --eco-light: #e8f5e9; }
+        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
+        
+        .wrapper { display: flex; height: 100vh; position: relative; }
+        
+        /* Страничен панел */
+        .sidebar { 
+            width: 360px; background: white; padding: 25px; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 1001; overflow-y: auto; 
+        }
+        
+        /* Карта */
+        #map { flex-grow: 1; height: 100%; z-index: 1; }
+
+        /* Дизайн на елементите */
+        .logo-section h2 { color: var(--eco-green); font-weight: 800; margin-bottom: 2px; }
+        .search-box { background: #f8f9fa; padding: 18px; border-radius: 12px; margin: 20px 0; border: 1px solid #eee; }
+        
+        .btn-route { 
+            background: var(--eco-green); color: white; width: 100%; border: none;
+            padding: 12px; border-radius: 8px; font-weight: bold; transition: 0.3s;
+        }
+        .btn-route:hover { background: #1b4332; transform: translateY(-2px); }
+
+        /* Статистика горе вдясно */
+        .stats-overlay {
+            position: absolute; top: 20px; right: 20px; z-index: 1000;
+            background: white; padding: 15px 25px; border-radius: 12px;
+            display: flex; gap: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 1px solid #eee;
+        }
+        .stat-item { text-align: center; }
+        .stat-item strong { display: block; font-size: 1.2rem; color: #333; }
+        .stat-item small { color: #888; text-transform: uppercase; font-size: 0.7rem; font-weight: bold; }
+
+        /* Еко Метър */
+        .eco-meter { margin: 25px 0; }
+        .interest-tag { 
+            display: inline-block; padding: 6px 12px; margin: 3px; border-radius: 20px;
+            border: 1px solid #ddd; font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+        }
+        .interest-tag.active { background: var(--eco-light); border-color: var(--eco-green); color: var(--eco-green); }
+
+        /* Скриване на дефолтния панел на Leaflet Routing */
+        .leaflet-routing-container { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="stats-overlay">
+        <div class="stat-item"><strong id="co2Val">0.0</strong><small>kg CO₂</small></div>
+        <div class="stat-item"><strong id="distVal">0</strong><small>km</small></div>
+        <div class="stat-item"><strong id="timeVal">0</strong><small>min</small></div>
+    </div>
+
+    <div class="sidebar">
+        <div class="logo-section">
+            <h2>EcoPath AI</h2>
+            <p class="text-muted small m-0">ИНТЕЛИГЕНТНА ЕКО-НАВИГАЦИЯ</p>
+        </div>
+
+        <div class="search-box">
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">НАЧАЛНА ТОЧКА</label>
+                <input type="text" id="startInput" class="form-control" value="София">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-muted">КРАЙНА ТОЧКА</label>
+                <input type="text" id="endInput" class="form-control" value="Рим">
+            </div>
+            <button class="btn-route" onclick="calculateRoute()">Намери маршрут</button>
+        </div>
+
+        <div class="eco-meter">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="m-0 fw-bold">Еко Метър</h6>
+                <span id="ecoLabel" class="badge bg-success">Еко</span>
+            </div>
+            <input type="range" id="ecoSlider" class="form-range" min="0" max="100" value="80">
+            <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem;">
+                <span>БЪРЗО</span>
+                <span>БАЛАНС</span>
+                <span>ЕКО</span>
+            </div>
+        </div>
+
+        <div class="interests mt-4">
+            <h6 class="fw-bold small mb-3">ВАШИТЕ ИНТЕРЕСИ</h6>
+            <div class="interest-tag active">🍃 Природа</div>
+            <div class="interest-tag">🏛️ История</div>
+            <div class="interest-tag active">☕ Кафенета</div>
+            <div class="interest-tag">📸 Фотография</div>
+            <div class="interest-tag active">🎨 Изкуство</div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<script>
+    // 1. Инициализация на картата със светъл стил
+    var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    var routingControl = null;
+
+    // 2. Функция за превръщане на име на град в координати
+    async function getCoords(city) {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+            const data = await response.json();
+            return data.length > 0 ? L.latLng(data[0].lat, data[0].lon) : null;
+        } catch (e) { return null; }
+    }
+
+    // 3. Основна функция за изчисляване на пътя
+    async function calculateRoute() {
+        const startCity = document.getElementById('startInput').value;
+        const endCity = document.getElementById('endInput').value;
+        const ecoValue = document.getElementById('ecoSlider').value;
+
+        const startCoords = await getCoords(startCity);
+        const endCoords = await getCoords(endCity);
+
+        if (!startCoords || !endCoords) {
+            alert("Градът не е намерен!");
+            return;
+        }
+
+        if (routingControl) { map.removeControl(routingControl); }
+
+        // Цвят на линията спрямо еко метъра
+        let routeColor = ecoValue > 66 ? '#2d6a4f' : (ecoValue > 33 ? '#f39c12' : '#e74c3c');
+        document.getElementById('ecoLabel').className = `badge ${ecoValue > 66 ? 'bg-success' : (ecoValue > 33 ? 'bg-warning' : 'bg-danger')}`;
+        document.getElementById('ecoLabel').innerText = ecoValue > 66 ? 'Еко' : (ecoValue > 33 ? 'Баланс' : 'Бързо');
+
+        routingControl = L.Routing.control({
+            waypoints: [startCoords, endCoords],
+            lineOptions: {
+                styles: [{ color: routeColor, opacity: 0.8, weight: 6 }]
+            },
+            addWaypoints: false,
+            show: false,
+            routeWhileDragging: false
+        }).on('routesfound', function(e) {
+            const route = e.routes[0];
+            const distKm = (route.summary.totalDistance / 1000).toFixed(1);
+            const timeMin = Math.round(route.summary.totalTime / 60);
+            
+            // Симулация на CO2 емисии (Еко режим спестява 30%)
+            const baseCO2 = 0.12; // кг на км
+            const ecoFactor = ecoValue > 66 ? 0.7 : (ecoValue > 33 ? 0.85 : 1.0);
+            const totalCO2 = (distKm * baseCO2 * ecoFactor).toFixed(1);
+
+            // Обновяване на UI
+            document.getElementById('distVal').innerText = distKm;
+            document.getElementById('timeVal').innerText = timeMin;
+            document.getElementById('co2Val').innerText = totalCO2;
+        }).addTo(map);
+    }
+
+    // Слушател за промяна на Еко Метъра
+    document.getElementById('ecoSlider').addEventListener('change', calculateRoute);
+
+    // Стартираме първоначалния маршрут
+    calculateRoute();
+</script>
+
+</body>
+</html>
