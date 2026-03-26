@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
     <title>EcoPath AI - Travel Time Edition</title>
-=======
-    <title>EcoPath AI - Travel Time Edition</title>
->>>>>>> 2dedee6d73536ff050f8224cc0e10a78f97ca1fb
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<<<<<<< HEAD
     
     <style>
         :root { --eco-green: #2d6a4f; --eco-light: #e8f5e9; }
@@ -34,28 +29,19 @@
         #loading { display: none; margin-top: 15px; text-align: center; color: var(--eco-green); font-weight: bold; }
         .time-highlight { color: #d9534f; font-weight: bold; }
     </style>
-=======
-    <link rel="stylesheet" href="ecopath.css">
->>>>>>> 2dedee6d73536ff050f8224cc0e10a78f97ca1fb
 </head>
 <body>
 
 <div class="wrapper">
     <div class="sidebar">
-<<<<<<< HEAD
         <h2 class="fw-bold mb-1" style="color: var(--eco-green)"><i class="bi bi-clock-history"></i> EcoPath AI</h2>
         <p class="text-muted small mb-4">Време и емисии в реално време</p>
-=======
-        <h2>EcoPath AI</h2>
-        <p class="text-muted small">ИНТЕЛИГЕНТНА ЕКО-НАВИГАЦИЯ</p>
->>>>>>> 2dedee6d73536ff050f8224cc0e10a78f97ca1fb
 
         <div class="search-box">
             <label class="small fw-bold text-muted">ОТ:</label>
             <input type="text" id="startInput" class="form-control mb-3" value="Sofia, Bulgaria">
             
             <label class="small fw-bold text-muted">ДО:</label>
-<<<<<<< HEAD
             <input type="text" id="endInput" class="form-control mb-3" value="Paris, France">
             
             <label class="small fw-bold text-muted">ВИД ТРАНСПОРТ:</label>
@@ -86,37 +72,6 @@
                 <div id="scoreBar" class="progress-bar bg-success" style="width: 0%"></div>
             </div>
         </div>
-=======
-            <input type="text" id="endInput" class="form-control mb-2" value="Plovdiv">
-            
-            <button class="btn-route" id="routeBtn">Намери маршрут</button>
-            <div id="loader">🌍 Анализиране...</div>
-        </div>
-
-        <div class="box">
-            <h6>Еко Метър: <span id="ecoLabel" class="badge bg-success">Еко</span></h6>
-            <input type="range" id="ecoSlider" class="form-range" min="0" max="100" value="20">
-            <div class="d-flex justify-content-between text-muted" style="font-size: 10px;">
-                <span>ЕКО</span>
-                <span>БЪРЗ</span>
-            </div>
-        </div>
-
-        <h6 class="mt-4 small fw-bold text-muted">ПИНГНИ ОБЕКТИ:</h6>
-        <div class="poi-filters">
-            <div class="form-check">
-                <input class="form-check-input poi-check" type="checkbox" value="130" id="checkRest">
-                <label class="form-check-label small" for="checkRest">Ресторанти</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input poi-check" type="checkbox" value="330" id="checkHotel">
-                <label class="form-check-label small" for="checkHotel">Хотели</label>
-            </div>
-        </div>
-
-        <h6 class="mt-4 small fw-bold text-muted">📍 ОБЕКТИ ПО ПЪТЯ:</h6>
-        <div id="poiList"><p class="text-muted small">Изберете категория...</p></div>
->>>>>>> 2dedee6d73536ff050f8224cc0e10a78f97ca1fb
     </div>
 
     <div id="map"></div>
@@ -138,7 +93,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<<<<<<< HEAD
 <script>
     const API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0=';
 
@@ -260,9 +214,6 @@
         });
     }
 </script>
-=======
-<script src="ecopath.js"></script>
->>>>>>> 2dedee6d73536ff050f8224cc0e10a78f97ca1fb
 
 </body>
 </html>
