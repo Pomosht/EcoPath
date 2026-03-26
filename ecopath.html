@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoPath AI - Фиксирана Версия</title>
+    <title>EcoPath AI - Работеща Версия</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -23,8 +23,9 @@
         .search-box { background: #f8f9fa; padding: 18px; border-radius: 12px; margin: 20px 0; border: 1px solid #eee; }
         .btn-route { 
             background: var(--eco-green); color: white; width: 100%; border: none;
-            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;
+            padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
         }
+        .btn-route:hover { background: #1b4332; }
 
         .stats-overlay {
             position: absolute; top: 20px; right: 20px; z-index: 1000;
@@ -33,31 +34,34 @@
         }
 
         .poi-item { 
-            font-size: 0.85rem; padding: 10px; border-bottom: 1px solid #eee; 
-            transition: 0.2s;
+            font-size: 0.85rem; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;
         }
         .poi-item:hover { background: var(--eco-light); }
         .poi-item b { color: var(--eco-green); display: block; }
 
-        #loader { display: none; margin-top: 10px; text-align: center; color: var(--eco-green); }
+        #loader { display: none; margin-top: 10px; text-align: center; color: var(--eco-green); font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="wrapper">
     <div class="stats-overlay">
-        <div class="text-center"><strong id="co2Val">0.0</strong><small>kg CO₂</small></div>
-        <div class="text-center"><strong id="distVal">0</strong><small>km</small></div>
-        <div class="text-center"><strong id="timeVal">0</strong><small>min</small></div>
+        <div class="text-center"><strong id="co2Val">0.0</strong><br><small>kg CO₂</small></div>
+        <div class="text-center"><strong id="distVal">0</strong><br><small>km</small></div>
+        <div class="text-center"><strong id="timeVal">0</strong><br><small>min</small></div>
     </div>
 
     <div class="sidebar">
-        <h2>EcoPath AI</h2>
+        <h2 style="color: var(--eco-green); font-weight: 800;">EcoPath AI</h2>
+        <p class="text-muted small">ИНТЕЛИГЕНТНА ЕКО-НАВИГАЦИЯ</p>
+
         <div class="search-box">
-            <input type="text" id="startInput" class="form-control mb-2" placeholder="От (напр. Sofia)" value="Sofia">
-            <input type="text" id="endInput" class="form-control mb-2" placeholder="До (напр. Plovdiv)" value="Plovdiv">
-            <button class="btn-route" id="searchBtn">Намери маршрут</button>
-            <div id="loader">Изчисляване...</div>
+            <label class="small fw-bold text-muted">ОТ:</label>
+            <input type="text" id="startInput" class="form-control mb-2" value="Sofia">
+            <label class="small fw-bold text-muted">ДО:</label>
+            <input type="text" id="endInput" class="form-control mb-2" value="Plovdiv">
+            <button class="btn-route" onclick="calculateRoute()">Намери маршрут</button>
+            <div id="loader">🌍 Изчисляване...</div>
         </div>
 
         <div class="eco-meter mb-4">
@@ -65,8 +69,8 @@
             <input type="range" id="ecoSlider" class="form-range" min="0" max="100" value="80">
         </div>
 
-        <h6>ПРЕПОРЪЧАНИ ОБЕКТИ:</h6>
-        <div id="poiList"><p class="text-muted small">Въведете дестинации...</p></div>
+        <h6>✨ ОБЕКТИ ПО ПЪТЯ:</h6>
+        <div id="poiList"><p class="text-muted small">Тук ще се появят кафенета и забележителности...</p></div>
     </div>
 
     <div id="map"></div>
@@ -75,8 +79,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-    // --- КОНФИГУРАЦИЯ ---
-    const ORS_API_KEY = 'c76064d12cc8a2e42c765f9fdb1882e0579037871ba7f8c6269a2ee321fff2ed'; 
+    // Твоят ключ (вече е тук)
+    const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0='; 
 
     var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
@@ -84,45 +88,24 @@
     var routeLayer = null;
     var markersGroup = L.layerGroup().addTo(map);
 
-    document.getElementById('searchBtn').addEventListener('click', calculateRoute);
-
-    // 1. ПОДОБРЕНО ТЪРСЕНЕ НА ГРАДОВЕ
     async function getCoords(city) {
         try {
             const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`;
-            const response = await fetch(url, {
-                headers: { 'Accept-Language': 'bg,en' }
-            });
+            const response = await fetch(url);
             const data = await response.json();
-            
-            if (data && data.length > 0) {
-                return { lat: data[0].lat, lon: data[0].lon, name: data[0].display_name };
-            }
-            return null;
-        } catch (e) {
-            console.error("Nominatim error:", e);
-            return null;
-        }
+            return data.length > 0 ? { lat: data[0].lat, lon: data[0].lon } : null;
+        } catch (e) { return null; }
     }
 
-    // 2. ОСНОВНА ФУНКЦИЯ
     async function calculateRoute() {
-        if (ORS_API_KEY.includes('ТУК_СЛОЖИ')) {
-            alert("Грешка: Липсва API ключ за OpenRouteService на ред 57!");
-            return;
-        }
-
         const loader = document.getElementById('loader');
         loader.style.display = 'block';
 
-        const startCity = document.getElementById('startInput').value;
-        const endCity = document.getElementById('endInput').value;
-
-        const start = await getCoords(startCity);
-        const end = await getCoords(endCity);
+        const start = await getCoords(document.getElementById('startInput').value);
+        const end = await getCoords(document.getElementById('endInput').value);
 
         if (!start || !end) {
-            alert("Градът не е намерен! Опитайте на латиница (Sofia, Plovdiv).");
+            alert("Градът не е намерен!");
             loader.style.display = 'none';
             return;
         }
@@ -138,78 +121,57 @@
             const geometry = data.features[0].geometry;
             const summary = data.features[0].properties.summary;
 
-            // Изчистване
             if (routeLayer) map.removeLayer(routeLayer);
             markersGroup.clearLayers();
 
-            // Рисуване
-            routeLayer = L.geoJSON(geometry, { style: { color: '#2d6a4f', weight: 6, opacity: 0.8 } }).addTo(map);
+            routeLayer = L.geoJSON(geometry, { style: { color: '#2d6a4f', weight: 6 } }).addTo(map);
             map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
 
-            // Статистика
             const dist = (summary.distance / 1000).toFixed(1);
             document.getElementById('distVal').innerText = dist;
             document.getElementById('timeVal').innerText = Math.round(summary.duration / 60);
             document.getElementById('co2Val').innerText = (dist * 0.11).toFixed(1);
 
-            // Търсене на обекти
             fetchPOIs(geometry);
-
         } catch (e) {
-            console.error(e);
-            alert("Грешка при маршрута: " + e.message);
+            alert("Грешка при API: Увери се, че ползваш HTTP сървър или CodePen.");
         } finally {
             loader.style.display = 'none';
         }
     }
 
-    // 3. ТЪРСЕНЕ НА ОБЕКТИ (ЗАБЕЛЕЖИТЕЛНОСТИ И КАФЕНЕТА)
     async function fetchPOIs(routeGeo) {
         const poiUrl = `https://api.openrouteservice.org/pois`;
         const body = {
             request: "pois",
-            geometry: { geojson: routeGeo, buffer: 1500 }, // Търсим в радиус 1.5км от пътя
-            filters: { category_group_ids: [130, 300], limit: 12 }
+            geometry: { geojson: routeGeo, buffer: 1000 },
+            filters: { category_group_ids: [130, 300], limit: 10 }
         };
 
         try {
             const res = await fetch(poiUrl, {
                 method: 'POST',
-                headers: { 
-                    'Authorization': ORS_API_KEY,
-                    'Content-Type': 'application/json' 
-                },
+                headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             const data = await res.json();
-            
             const list = document.getElementById('poiList');
             list.innerHTML = '';
-
-            if (!data.features || data.features.length === 0) {
-                list.innerHTML = '<p class="text-muted small">Няма обекти точно до пътя.</p>';
-                return;
-            }
 
             data.features.forEach(poi => {
                 const name = poi.properties.osm_tags.name || "Интересен обект";
                 const coords = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
                 
-                // Добавяне в списъка
                 const div = document.createElement('div');
                 div.className = 'poi-item';
                 div.innerHTML = `<b>${name}</b>`;
                 div.onclick = () => map.setView(coords, 15);
                 list.appendChild(div);
 
-                // Маркер на картата
                 L.circleMarker(coords, { radius: 6, color: '#2d6a4f', fillOpacity: 0.8 })
-                    .addTo(markersGroup)
-                    .bindPopup(name);
+                    .addTo(markersGroup).bindPopup(name);
             });
-        } catch (e) {
-            console.warn("POI error:", e);
-        }
+        } catch (e) { console.warn("POI error"); }
     }
 </script>
 </body>
