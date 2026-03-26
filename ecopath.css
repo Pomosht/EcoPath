@@ -1,14 +1,14 @@
 :root { 
     --eco-green: #2d6a4f; 
     --eco-light: #e8f5e9; 
-    --fast-red: #d90429;
+    --poi-orange: #f39c12;
 }
 
 body, html { 
     margin: 0; 
     padding: 0;
     height: 100%; 
-    font-family: Arial, sans-serif; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
     overflow: hidden; 
 }
 
@@ -17,89 +17,66 @@ body, html {
     height: 100vh; 
 }
 
-/* ЛЯВ ПАНЕЛ */
 .sidebar { 
     width: 320px; 
-    background-color: #f0f4f3; 
+    background-color: #f8f9fa; 
     padding: 20px; 
     box-sizing: border-box; 
-    border-right: 2px solid #ddd;
+    border-right: 1px solid #dee2e6;
     z-index: 1001;
     overflow-y: auto;
 }
 
-.sidebar h2 { 
-    margin-top: 0; 
-    color: #2e7d32; 
-    font-weight: 800;
-}
-
-/* Полета и Бутони */
 .search-box {
     background: white;
     padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-input.form-control { 
-    margin-bottom: 10px; 
-    border-radius: 6px; 
+.btn-eco {
+    width: 100%;
+    background-color: var(--eco-green);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.2s;
 }
 
-button.btn-route { 
-    width: 100%; 
-    padding: 10px; 
-    background-color: #2e7d32; 
-    color: white; 
-    border: none; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    font-size: 16px; 
-    transition: 0.3s;
-}
+.btn-eco:hover { background-color: #1b4332; }
 
-button:hover { background-color: #1b5e20; }
+#map { flex: 1; height: 100%; }
 
-/* Картички (Кутии) */
-.box { 
-    background: white; 
-    padding: 15px; 
-    margin-top: 15px; 
-    border-radius: 10px; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-}
-
-/* Статистика горе вдясно */
 .stats-overlay {
     position: absolute; 
     top: 20px; 
     right: 20px; 
     z-index: 1000;
     background: white; 
-    padding: 15px 25px; 
+    padding: 12px 20px; 
     border-radius: 12px;
     display: flex; 
-    gap: 30px; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    gap: 20px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* Карта */
-#map { 
-    flex: 1; 
-    height: 100%; 
-}
+.stat-card { text-align: center; }
 
-/* Списък с обекти */
 .poi-item { 
     font-size: 0.85rem; 
-    padding: 10px; 
-    border-bottom: 1px solid #eee; 
+    padding: 8px 12px; 
+    margin-bottom: 5px;
     cursor: pointer;
     background: white;
-    margin-top: 5px;
-    border-radius: 5px;
+    border-radius: 6px;
+    border-left: 4px solid var(--poi-orange);
+    transition: background 0.2s;
 }
-.poi-item:hover { background: var(--eco-light); }
 
-#loader { display: none; margin-top: 10px; text-align: center; color: var(--eco-green); font-weight: bold; }
+.poi-item:hover { 
+    background: #fff3e0; 
+}
+
+#loader { color: var(--eco-green); }
