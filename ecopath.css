@@ -19,7 +19,7 @@ body, html {
 
 /* ЛЯВ ПАНЕЛ */
 .sidebar { 
-    width: 320px; 
+    width: 22vw; 
     background-color: #f0f4f3; 
     padding: 20px; 
     box-sizing: border-box; 
