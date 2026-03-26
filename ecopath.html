@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="bg">
 <head>
@@ -185,3 +186,92 @@
 
 </body>
 </html>
+=======
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>EcoPath AI</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+
+        /* Ляв панел */
+        .sidebar {
+            width: 300px;
+            background-color: #f5f5f5;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: green;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: darkgreen;
+        }
+
+        .box {
+            background: #fff;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+
+        /* Карта */
+        .map {
+            flex: 1;
+            background-image: url("https://upload.wikimedia.org/wikipedia/commons/6/6e/Europe_satellite_image.jpg");
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>EcoPath AI</h2>
+
+        <label>Начална точка</label>
+        <input type="text" placeholder="София">
+
+        <label>Крайна точка</label>
+        <input type="text" placeholder="Рим">
+
+        <button>Намери маршрут</button>
+
+        <div class="box">
+            <p><b>Еко метър:</b> 13%</p>
+            <p>Автомобил</p>
+        </div>
+
+        <div class="box">
+            <p><b>Интереси:</b></p>
+            <p>Природа, История, Кафенета</p>
+        </div>
+    </div>
+
+    <div class="map"></div>
+<script src="script.js"></script>
+</body>
+</html>
+>>>>>>> b75f57c872df525af18f61bed8f579de3ea94eb7

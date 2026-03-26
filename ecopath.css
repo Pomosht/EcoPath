@@ -1,0 +1,61 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+}
+
+/* ЛЯВ ПАНЕЛ */
+.sidebar {
+    width: 300px;
+    background-color: #f0f4f3;
+    padding: 20px;
+    box-sizing: border-box;
+    border-right: 2px solid #ddd;
+}
+
+.sidebar h2 {
+    margin-top: 0;
+    color: #2e7d32;
+}
+
+/* Полета */
+input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 15px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+/* Бутон */
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #1b5e20;
+}
+
+/* Картички */
+.box {
+    background: white;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* КАРТА */
+.map {
+    flex: 1;
+    background-image: url("https://upload.wikimedia.org/wikipedia/commons/6/6e/Europe_satellite_image.jpg");
+    background-size: cover;
+    background-position: center;
+}
