@@ -1,44 +1,72 @@
-// 1. Инициализираме картата с временни координати
-var map = L.map('map').setView([0, 0], 2); 
-
-// 2. Добавяме слой с карта (OpenStreetMap)
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap'
-}).addTo(map);
-
-// 3. Използваме метода на Leaflet за геолокация
-map.locate({setView: true, maxZoom: 16});
-
-// 4. Функция, която се изпълнява при успешно локализиране
-function onLocationFound(e) {
-    var radius = e.accuracy / 2;
-
-    // Добавяме маркер на точното място
-    L.marker(e.latlng).addTo(map)
-        .bindPopup("Вие сте в радиус от " + radius + " метра от тази точка").openPopup();
-
-    // Добавяме кръг, показващ точността на локацията
-    L.circle(e.latlng, radius).addTo(map);
+// Функция за събиране на избраните категории
+function getSelectedCategories() {
+    const checkboxes = document.querySelectorAll('.poi-filter:checked');
+    return Array.from(checkboxes).map(cb => parseInt(cb.value));
 }
 
-map.on('locationfound', onLocationFound);
+async function fetchPOIs() {
+    // Вземаме геометрията на текущия маршрут
+    if (!routeLayer) return;
+    const routeGeo = routeLayer.toGeoJSON().features[0].geometry;
+    
+    const categories = getSelectedCategories();
+    const list = document.getElementById('poiList');
+    markersGroup.clearLayers(); // Изчистваме старите маркери
 
-// 5. Функция за грешка (ако потребителят откаже достъп)
-function onLocationError(e) {
-    alert("Неуспешно определяне на местоположението: " + e.message);
-    // При грешка можем да центрираме картата на София по подразбиране
-    map.setView([42.6977, 23.3219], 13);
-}
-
-function onLocationError(e) {
-    if (e.code === 1) { // Error code 1 е "Permission Denied"
-        alert("Моля, разрешете достъп до местоположението от настройките на браузъра си, за да видите екопътеките около вас.");
-    } else {
-        alert("Грешка при локализиране: " + e.message);
+    if (categories.length === 0) {
+        list.innerHTML = '<p class="text-muted small">Изберете категория горе...</p>';
+        return;
     }
-    // Центрираме по подразбиране в София, за да не остане празен екран
-    map.setView([42.6977, 23.3219], 13);
+
+    const poiUrl = `https://api.openrouteservice.org/pois`;
+    const body = {
+        request: "pois",
+        geometry: { geojson: routeGeo, buffer: 1000 }, // 1000 метра около маршрута
+        filters: { category_group_ids: categories, limit: 20 }
+    };
+
+    try {
+        const res = await fetch(poiUrl, {
+            method: 'POST',
+            headers: { 'Authorization': ORS_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        list.innerHTML = '';
+
+        if (!data.features || data.features.length === 0) {
+            list.innerHTML = '<p class="text-muted small">Няма открити обекти в тази зона.</p>';
+            return;
+        }
+
+        data.features.forEach(poi => {
+            const name = poi.properties.osm_tags.name || "Обект без име";
+            const coords = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
+            
+            // Добавяме в списъка вляво
+            const div = document.createElement('div');
+            div.className = 'poi-item';
+            div.innerHTML = `<b>${name}</b><small>${poi.properties.osm_tags.amenity || ''}</small>`;
+            div.onclick = () => {
+                map.setView(coords, 16);
+                L.popup().setLatLng(coords).setContent(name).openOn(map);
+            };
+            list.appendChild(div);
+
+            // Добавяме маркер на картата
+            L.circleMarker(coords, { 
+                radius: 8, 
+                color: '#e67e22', // Оранжев цвят за обектите, за да се отличават
+                fillColor: '#f39c12',
+                fillOpacity: 1 
+            }).addTo(markersGroup).bindPopup(name);
+        });
+    } catch (e) { 
+        console.error("POI error:", e); 
+    }
 }
 
-map.on('locationerror', onLocationError);
+// Добавяме слушатели на чекбоксовете, за да обновяват картата веднага
+document.querySelectorAll('.poi-filter').forEach(checkbox => {
+    checkbox.addEventListener('change', fetchPOIs);
+});
