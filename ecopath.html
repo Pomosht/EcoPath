@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Eco-Travel: Rome to Sofia</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; }
+        
+        /* Left Panel: Info & Eco-Meter */
+        #sidebar { width: 400px; background: #f9fbf9; padding: 25px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; z-index: 1000; }
+        
+        /* Right Panel: The World Map */
+        #map { flex-grow: 1; height: 100%; }
+
+        /* Eco-Meter Style */
+        .eco-card { background: white; border-radius: 15px; padding: 20px; border-left: 8px solid #4CAF50; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .eco-score { font-size: 32px; font-weight: bold; color: #2E7D32; }
+        
+        .stop-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .stop-item h4 { margin: 5px 0; color: #333; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Your Journey 🌍</h2>
+        <p><strong>Route:</strong> Rome ➔ Sofia</p>
+
+        <div class="eco-card">
+            <span>Eco-Efficiency Score:</span>
+            <div class="eco-score" id="score">82%</div>
+            <p><small id="eco-advice">Great choice! Taking the ferry/train reduces your CO2 by 60% compared to flying.</small></p>
+        </div>
+
+        <hr>
+
+        <h3>Top Stops Along the Way</h3>
+        <div id="stops-list">
+            <div class="stop-item">
+                <h4>📍 Bari, Italy</h4>
+                <p><small>Perfect place to catch the ferry to the Balkans. Stay at "Eco-Hotel Bari".</small></p>
+            </div>
+            <div class="stop-item">
+                <h4>📍 Dubrovnik, Croatia</h4>
+                <p><small>Visit the Old Town walls. UNESCO Heritage site.</small></p>
+            </div>
+            <div class="stop-item">
+                <h4>📍 Belgrade, Serbia</h4>
+                <p><small>The "Gate of the Balkans". Visit the Kalemegdan Fortress.</small></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        // 1. Initialize the Map
+        const map = L.map('map').setView([41.9028, 12.4964], 5); // Focused on Europe
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // 2. Add Route Markers
+        const rome = L.marker([41.9028, 12.4964]).addTo(map).bindPopup("<b>Rome</b> (Start)");
+        const sofia = L.marker([42.6977, 23.3219]).addTo(map).bindPopup("<b>Sofia</b> (Destination)");
+        const bari = L.marker([41.1171, 16.8719]).addTo(map).bindPopup("<b>Bari</b> (Recommended Stop)");
+
+        // 3. Draw a "Travel Line" (Simplified)
+        const travelPath = L.polyline([
+            [41.9028, 12.4964], // Rome
+            [41.1171, 16.8719], // Bari
+            [42.6507, 18.0944], // Dubrovnik
+            [44.7866, 20.4489], // Belgrade
+            [42.6977, 23.3219]  // Sofia
+        ], {color: '#4CAF50', weight: 4, dashArray: '10, 10'}).addTo(map);
+
+        // 4. Custom Logic for the Eco-Meter
+        // In a real app, this would change based on "Car", "Train", or "Plane" inputs
+        function updateEcoStatus(mode) {
+            const scoreEl = document.getElementById('score');
+            const adviceEl = document.getElementById('eco-advice');
+            
+            if(mode === 'train') {
+                scoreEl.innerText = "95%";
+                adviceEl.innerText = "Fantastic! You are a climate hero.";
+            } else {
+                scoreEl.innerText = "40%";
+                adviceEl.innerText = "Consider using public transit to improve your score.";
+            }
+        }
+    </script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,38 @@
+<style>
+    /* Премахваме излишните разстояния */
+    body, html { margin: 0; padding: 0; height: 100%; font-family: 'Arial', sans-serif; }
+
+    .main-container { display: flex; height: 100vh; }
+
+    /* Страничният панел */
+    .sidebar { 
+        width: 350px; 
+        background: #2d3436; 
+        color: white; 
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card { background: #3d4446; padding: 15px; border-radius: 12px; }
+
+    /* Дизайн на еко-метъра */
+    .meter-container { 
+        background: #eee; 
+        border-radius: 20px; 
+        height: 25px; 
+        overflow: hidden; 
+        margin: 10px 0;
+    }
+    #eco-bar { 
+        background: linear-gradient(90deg, #4caf50, #8bc34a); 
+        height: 100%; 
+        text-align: center; 
+        color: white; 
+        font-weight: bold;
+    }
+
+    /* Картата запълва останалото място */
+    #map { flex: 1; }
+</style>
