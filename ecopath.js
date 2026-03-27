@@ -4,33 +4,46 @@ var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
 var routeLayer = null;
 var markersGroup = L.layerGroup().addTo(map);
 
-const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+// ЦВЕТНИ И НАСИТЕНИ СЛОЕВЕ
+const colorfulTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community'
+}).addTo(map);
 
-// Конфигурация без църкви и с фокус върху Еко обекти
+const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; CARTO'
+});
+
 const typeConfig = {
-    'restaurant': { label: 'Еко Ресторант', icon: '🍏', color: '#2d6a4f' },
-    'cafe': { label: 'Био Кафене', icon: '☕', color: '#40916c' },
-    'hotel': { label: 'Еко Хотел', icon: '🌿', color: '#1b4332' },
-    'guest_house': { label: 'Къща за гости', icon: '🏠', color: '#1b4332' },
-    'museum': { label: 'Музей', icon: '🏛️', color: '#a67c52' },
-    'gallery': { label: 'Галерия', icon: '🎨', color: '#a67c52' },
-    'castle': { label: 'Замък/Крепост', icon: '🏰', color: '#a67c52' },
-    'park': { label: 'Парк/Природа', icon: '🌳', color: '#74c69d' },
-    'nature_reserve': { label: 'Еко пътека', icon: '🥾', color: '#74c69d' },
-    'viewpoint': { label: 'Гледка', icon: '🔭', color: '#74c69d' }
+    'restaurant': { label: 'Хапване', icon: '🍎', color: '#ff4d4d' },
+    'cafe': { label: 'Кафе', icon: '☕', color: '#ff9f43' },
+    'hotel': { label: 'Спирка', icon: '⛺', color: '#54a0ff' },
+    'museum': { label: 'Култура', icon: '🎭', color: '#5f27cd' },
+    'nature_reserve': { label: 'Природа', icon: '🌲', color: '#10ac84' }
 };
 
+// ТЕМА
 const themeBtn = document.getElementById('themeToggle');
 if (themeBtn) {
     themeBtn.onclick = () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
-        isDark ? (map.removeLayer(lightTiles), darkTiles.addTo(map)) : (map.removeLayer(darkTiles), lightTiles.addTo(map));
+        
+        if (isDark) {
+            map.removeLayer(colorfulTiles);
+            darkTiles.addTo(map);
+        } else {
+            map.removeLayer(darkTiles);
+            colorfulTiles.addTo(map);
+        }
+
+        if (routeLayer) {
+            routeLayer.setStyle({ color: isDark ? '#00ff88' : '#2ecc71' });
+        }
     };
 }
 
+// ГЕОКОДИРАНЕ & МАРШРУТ
 async function getCoords(city) {
     try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
@@ -62,9 +75,21 @@ async function calculateRoute() {
         if (routeLayer) map.removeLayer(routeLayer);
         markersGroup.clearLayers();
 
-        routeLayer = L.geoJSON(data, { style: { color: '#2d6a4f', weight: 5 } }).addTo(map);
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        // Линията сега е по-ярка и има сянка
+        routeLayer = L.geoJSON(data, { 
+            style: { 
+                color: isDark ? '#00ff88' : '#27ae60', 
+                weight: 7,
+                opacity: 0.9,
+                lineCap: 'round'
+            } 
+        }).addTo(map);
+        
         map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
 
+        // Статистики
         const summary = data.features[0].properties.summary;
         const distKm = summary.distance / 1000;
         document.getElementById('distVal').innerText = Math.round(distKm);
@@ -74,22 +99,21 @@ async function calculateRoute() {
         const co2 = distKm * factor;
         document.getElementById('co2Val').innerText = co2.toFixed(1);
 
-        let score = transport === 'bike' ? 100 : Math.max(10, Math.min(100, 100 - (co2 * 2.2)));
+        let score = transport === 'bike' ? 100 : Math.max(10, Math.min(100, 100 - (co2 * 2.5)));
         const bar = document.getElementById('scoreBar');
         bar.style.width = score + "%";
         document.getElementById('scoreText').innerText = Math.round(score) + "%";
-        bar.style.backgroundColor = score > 75 ? "#2d6a4f" : score > 40 ? "#f39c12" : "#d9534f";
-
+        
         fetchPOIs(data.features[0].geometry);
     } catch (e) { console.error(e); } finally { loader.style.display = 'none'; }
 }
 
+// ТЪРСЕНЕ НА ОБЕКТИ
 async function fetchPOIs(routeGeo) {
-    const selectedIds = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
+    const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
     const list = document.getElementById('poiList');
-    
-    if (!selectedIds.length) { 
-        list.innerHTML = '<p class="text-center small text-muted">Изберете категория...</p>'; 
+    if (!selected.length) { 
+        list.innerHTML = '<p class="text-muted small m-0 text-center">Изберете категория...</p>'; 
         markersGroup.clearLayers(); 
         return; 
     }
@@ -104,35 +128,34 @@ async function fetchPOIs(routeGeo) {
             body: JSON.stringify({ 
                 request: "pois", 
                 geometry: { geojson: { type: "LineString", coordinates: simpleCoords }, buffer: 1500 },
-                filters: { category_group_ids: selectedIds }, 
-                limit: 100 
+                filters: { category_group_ids: selected }, 
+                limit: 60 
             })
         });
         
         const data = await res.json();
-        list.innerHTML = ''; markersGroup.clearLayers();
+        list.innerHTML = ''; 
+        markersGroup.clearLayers();
         
-        if (!data.features || data.features.length === 0) {
-            list.innerHTML = '<p class="text-center small text-muted">Няма открити обекти.</p>';
-            return;
-        }
-
-        data.features.forEach(poi => {
+        data.features?.forEach(poi => {
             const tags = poi.properties.osm_tags || {};
-            const name = tags.name || tags['name:bg'] || "Еко обект";
-            const actualType = tags.tourism || tags.historic || tags.leisure || tags.amenity || 'object';
-            const config = typeConfig[actualType] || { label: 'Интересно място', icon: '📍', color: '#2d6a4f' };
-
+            const name = tags.name || tags['name:bg'] || "Обект";
+            const type = tags.amenity || tags.tourism || 'object';
+            const config = typeConfig[type] || { label: 'Точка', icon: '📍', color: '#10ac84' };
             const coords = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
+
             const div = document.createElement('div');
             div.className = 'poi-item'; 
-            div.innerHTML = `<span>${config.icon}</span> <strong>${name}</strong><br><small class="text-muted ms-4">${config.label}</small>`;
+            div.style.borderLeft = `4px solid ${config.color}`;
+            div.innerHTML = `<span>${config.icon}</span> <strong>${name}</strong>`;
             div.onclick = () => { map.flyTo(coords, 16); L.popup().setLatLng(coords).setContent(name).openOn(map); };
             list.appendChild(div);
             
-            L.circleMarker(coords, { radius: 8, fillColor: config.color, color: "#fff", weight: 2, fillOpacity: 0.8 }).addTo(markersGroup);
+            L.circleMarker(coords, { 
+                radius: 7, fillColor: config.color, color: "#fff", weight: 2, fillOpacity: 1 
+            }).addTo(markersGroup);
         });
-    } catch (e) { list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане.</p>'; }
+    } catch (e) { console.error(e); }
 }
 
 document.querySelectorAll('.poi-check').forEach(cb => {
