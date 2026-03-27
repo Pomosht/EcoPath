@@ -4,29 +4,37 @@
     --accent-green: #52b788;
     --bg-color: #f8f9fa;
     --text-color: #212529;
+    --muted-text: #6c757d;
     --sidebar-bg: #ffffff;
     --card-bg: #ffffff;
+    --input-bg: #ffffff;
     --border-color: #dee2e6;
+    --shadow: rgba(0,0,0,0.1);
 }
 
 body.dark-mode {
-    --bg-color: #1a1a2e;
+    --bg-color: #121212;
     --text-color: #e0e0e0;
-    --sidebar-bg: #16213e;
-    --card-bg: #0f3460;
-    --border-color: #2a2a40;
+    --muted-text: #a0a0a0;
+    --sidebar-bg: #1a1a1a;
+    --card-bg: #242424;
+    --input-bg: #2d2d2d;
+    --border-color: #333333;
+    --shadow: rgba(0,0,0,0.5);
 }
 
 body {
-    font-family: sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     margin: 0;
     overflow: hidden;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 .wrapper { display: flex; height: 100vh; width: 100vw; }
 
+/* САЙДБАР */
 .sidebar {
     width: 320px;
     background: var(--sidebar-bg);
@@ -34,37 +42,84 @@ body {
     padding: 20px;
     z-index: 1000;
     overflow-y: auto;
+    transition: background-color 0.3s;
 }
 
+.text-muted {
+    color: var(--muted-text) !important;
+}
+
+/* КАРТА */
 #map {
-    flex: 1; /* Заема оставащото място в wrapper-а */
-    height: 100vh; /* Заема цялата височина на екрана */
+    flex: 1;
+    height: 100vh;
     width: 100%;
-    background: #e5e3df; /* Светло сив фон, докато зареди */
-    display: block;
+    background: #e5e3df;
 }
 
-/* КАРТАТА - ТЪМЕН РЕЖИМ чрез CSS филтър */
 .dark-map-filter {
     filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
 
-/* Изключения за Popups в тъмен режим, за да не са инвертирани */
-.dark-map-filter .leaflet-popup-content-wrapper,
-.dark-map-filter .leaflet-popup-tip {
-    filter: invert(100%) hue-rotate(180deg);
-    background: #16213e;
-    color: white;
-}
-
-.search-box, .box, .poi-filters {
+/* КУТИИ И ЕЛЕМЕНТИ */
+.search-box, .box, .poi-container {
     background: var(--card-bg);
     padding: 15px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
     margin-bottom: 15px;
+    transition: background-color 0.3s, border-color 0.3s;
 }
 
+/* ИНПУТИ И СЕЛЕКТИ */
+.form-control, .form-select {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-green) !important;
+    box-shadow: 0 0 0 0.25rem rgba(82, 183, 136, 0.25) !important;
+}
+
+/* БУТОНИ ТИП "CHIPS" (RADIO) */
+.poi-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+}
+
+.filter-chip {
+    position: relative;
+}
+
+.filter-chip input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.filter-chip label {
+    display: inline-block;
+    padding: 6px 12px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-color);
+}
+
+.filter-chip input:checked + label {
+    background: var(--primary-green);
+    color: white;
+    border-color: var(--primary-green);
+}
+
+/* ЕКО БУТОН */
 .btn-eco {
     width: 100%;
     padding: 12px;
@@ -74,20 +129,22 @@ body {
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
+    transition: opacity 0.2s;
 }
 
+.btn-eco:hover { opacity: 0.9; }
+
+/* СПИСЪК С ОБЕКТИ */
 .poi-item {
-    padding: 8px;
-    margin-bottom: 5px;
-    background: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.85rem;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
 }
 
+.poi-item:last-child { border-bottom: none; }
 .poi-item:hover { background: var(--light-green); color: black; }
 
+/* СТАТИСТИКИ (ГОРЕ ВДЯСНО) */
 .stats-overlay {
     position: fixed;
     top: 20px;
@@ -103,8 +160,101 @@ body {
     border-radius: 10px;
     border: 1px solid var(--border-color);
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px var(--shadow);
+    min-width: 80px;
+    transition: background-color 0.3s;
+}
+
+.stat-card strong { display: block; font-size: 1.1rem; color: var(--accent-green); }
+.stat-card small { font-size: 0.65rem; color: var(--muted-text); text-transform: uppercase; }
+
+/* БАЛОНЧЕ ЗА ТЪРСЕНЕ */
+#status-bubble {
+    display: none;
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--primary-green);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    box-shadow: 0 4px 15px var(--shadow);
+    z-index: 9999;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* ЛОУДЪР */
+#loader {
+    display: none;
+}
+
+/* SCROLLBAR СТИЛ (за Dark Mode) */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-color); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-green); }
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 9999;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+#loader {
+    display: none; /* Скрит по подразбиране */
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    font-weight: bold;
+    color: #2ecc71;
 }
 
 .stat-card strong { display: block; font-size: 1.2rem; color: var(--accent-green); }
 .stat-card small { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+
+
+/* Фикс за текстовете в кутиите (Екологичен рейтинг, Филтри и т.н.) */
+.sidebar h6, 
+.sidebar .small.fw-bold {
+    color: var(--text-color) !important; /* Прави заглавията бели в тъмна тема */
+    opacity: 0.9;
+}
+
+/* Специфичен фикс за Еко Рейтинг текста (0%) */
+#scoreText {
+    color: #ffffff !important; /* Процентът винаги да е бял, защото е върху зелен/червен бадж */
+}
+
+/* Фикс за текста "Изберете категория" и списъка */
+#poiList p, .poi-item span {
+    color: var(--muted-text) !important;
+}
+
+/* Оправяне на фоновете на прогрес бара, за да не се сливат */
+.progress {
+    background-color: var(--input-bg) !important; /* Тъмен фон за бара в тъмна тема */
+    border: 1px solid var(--border-color);
+}
+
+/* Поправка на иконите в сайдбара */
+.sidebar i {
+    color: var(--accent-green);
+}

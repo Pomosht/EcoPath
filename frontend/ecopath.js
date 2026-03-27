@@ -1,17 +1,102 @@
 let map, routeLayer, markersGroup;
+let currentRouteGeometry = null; 
+let poiAbortController = null;
 
-// Инициализация
+// Инициализация на картата
 map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
 markersGroup = L.layerGroup().addTo(map);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-async function getCoords(city) {
-    const res = await fetch(`/api/geocode?q=${encodeURIComponent(city)}`);
-    const data = await res.json();
-    return data[0] ? { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) } : null;
+function getRouteColor() {
+    return document.body.classList.contains('dark-mode') ? '#52b788' : '#E37556'; 
 }
 
-async function calculateRoute() {
+export function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    document.getElementById('map').classList.toggle('dark-map-filter', isDark);
+    if (routeLayer) routeLayer.setStyle({ color: getRouteColor() });
+}
+
+async function getCoords(city) {
+    try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(city)}`);
+        const data = await res.json();
+        return data[0] ? { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) } : null;
+    } catch (e) { return null; }
+}
+
+// ФУНКЦИЯ ЗА ОБЕКТИ (САМО ЕДНА КАТЕГОРИЯ)
+async function fetchPOIs() {
+    if (!currentRouteGeometry) return;
+    
+    if (poiAbortController) poiAbortController.abort();
+    poiAbortController = new AbortController();
+
+    const bubble = document.getElementById('status-bubble');
+    const listContainer = document.getElementById('poiList');
+    
+    if (bubble) bubble.style.display = 'block';
+
+    const selectedRadio = document.querySelector('.poi-radio:checked');
+    if (!selectedRadio) {
+        markersGroup.clearLayers();
+        listContainer.innerHTML = '<p class="text-muted small m-0 text-center">Няма избрани обекти</p>';
+        if (bubble) bubble.style.display = 'none';
+        return;
+    }
+
+    const category = selectedRadio.value;
+
+    try {
+        const response = await fetch('/api/pois', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ geometry: currentRouteGeometry, categories: [category] }),
+            signal: poiAbortController.signal
+        });
+        
+        const data = await response.json();
+        renderMarkers(data);
+        updatePOIList(data);
+
+    } catch (err) {
+        if (err.name !== 'AbortError') console.error("POI Error:", err);
+    } finally {
+        if (bubble) bubble.style.display = 'none';
+    }
+}
+
+function renderMarkers(pois) {
+    markersGroup.clearLayers();
+    pois.forEach(poi => {
+        const marker = L.marker([poi.lat, poi.lon]);
+        marker.bindPopup(`<b>${poi.tags.name}</b><br>${poi.tags.amenity}`);
+        markersGroup.addLayer(marker);
+    });
+}
+
+function updatePOIList(pois) {
+    const listContainer = document.getElementById('poiList');
+    if (pois.length === 0) {
+        listContainer.innerHTML = '<p class="text-muted small m-0 text-center">Не бяха намерени обекти в тази зона.</p>';
+        return;
+    }
+    
+    listContainer.innerHTML = pois.map(poi => `
+        <div class="poi-item mb-1 p-1 border-bottom" style="font-size: 0.75rem;">
+            <strong>${poi.tags.name}</strong><br>
+            <span class="text-muted">${poi.tags.amenity}</span>
+        </div>
+    `).join('');
+}
+
+window.clearPOIs = function() {
+    document.querySelectorAll('.poi-radio').forEach(r => r.checked = false);
+    markersGroup.clearLayers();
+    document.getElementById('poiList').innerHTML = '<p class="text-muted small m-0 text-center">Няма избрани обекти</p>';
+}
+
+export async function calculateRoute() {
     const loader = document.getElementById('loader');
     if (loader) loader.style.display = 'block';
 
@@ -33,111 +118,50 @@ async function calculateRoute() {
         const routeData = await res.json();
         if (loader) loader.style.display = 'none';
 
-        // Рисуване на маршрута
         if (routeLayer) map.removeLayer(routeLayer);
-        routeLayer = L.geoJSON(routeData.geometry, { style: { color: '#2d6a4f', weight: 6 } }).addTo(map);
+        currentRouteGeometry = routeData.geometry;
+        
+        routeLayer = L.geoJSON(currentRouteGeometry, { 
+            style: { color: getRouteColor(), weight: 6, opacity: 0.9 } 
+        }).addTo(map);
         map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
 
-        // Статистики
+        // МЕТРИКИ
         const distKm = routeData.distance / 1000;
         document.getElementById('distVal').innerText = Math.round(distKm);
 
-        let durationSec = (transport === 'bike') ? (distKm / 15) * 3600 : routeData.duration;
-        const h = Math.floor(durationSec / 3600);
-        const m = Math.floor((durationSec % 3600) / 60);
+        let durationSec = routeData.duration;
+        if (transport === 'bike') durationSec = (distKm / 15) * 3600;
+        const h = Math.floor(durationSec / 3600), m = Math.floor((durationSec % 3600) / 60);
         document.getElementById('timeVal').innerText = h > 0 ? `${h}ч ${m}м` : `${m}м`;
 
-        // Еко Метър & CO2 (Добавен автобус)
-        let co2PerKm = 0.19; // кола по подразбиране
-        let ecoScore = 25;
-
-        if (transport === 'bike') { co2PerKm = 0; ecoScore = 100; }
-        else if (transport === 'electric') { co2PerKm = 0.04; ecoScore = 85; }
-        else if (transport === 'bus') { co2PerKm = 0.07; ecoScore = 65; }
-
+        // CO2 & SCORE
+        let co2PerKm = transport === 'bike' ? 0 : transport === 'bus' ? 0.06 : transport === 'electric' ? 0.04 : 0.19;
+        let baseScore = transport === 'bike' ? 100 : transport === 'electric' ? 90 : transport === 'bus' ? 75 : 45;
+        
         document.getElementById('co2Val').innerText = (distKm * co2PerKm).toFixed(1);
+        let finalScore = Math.max(5, baseScore - (transport !== 'bike' ? Math.floor(distKm / 50) * 5 : 0));
         
         const bar = document.getElementById('scoreBar');
-        if (bar) {
-            bar.style.width = ecoScore + '%';
-            bar.className = `progress-bar ${ecoScore > 60 ? 'bg-success' : ecoScore > 40 ? 'bg-warning' : 'bg-danger'}`;
-        }
-        document.getElementById('scoreText').innerText = ecoScore + '%';
+        bar.style.width = finalScore + '%';
+        bar.className = `progress-bar ${finalScore > 75 ? 'bg-success' : finalScore > 45 ? 'bg-warning' : 'bg-danger'}`;
+        document.getElementById('scoreText').innerText = finalScore + '%';
 
-        // Викаме POIs
-        fetchPOIs(routeData.geometry);
-    } catch (e) { console.error(e); }
+        fetchPOIs();
+    } catch (e) { if (loader) loader.style.display = 'none'; }
 }
 
-async function fetchPOIs(routeGeo) {
-    const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => cb.value);
-    
-    // Ако нищо не е избрано, само чистим и излизаме
-    if (selected.length === 0) {
-        markersGroup.clearLayers();
-        document.getElementById('poiList').innerHTML = '<p class="text-muted small text-center">Изберете категория...</p>';
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/pois', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ geometry: routeGeo, categories: selected })
-        });
-        const elements = await res.json();
-        
-        markersGroup.clearLayers();
-        const list = document.getElementById('poiList');
-        list.innerHTML = '';
-
-        elements.forEach(el => {
-            const coords = [el.lat, el.lon];
-            
-            // Динамичен цвят: Синьо за хотели, Оранжево за останалите
-            const color = el.tags.tourism === 'hotel' || el.tags.tourism === 'hostel' ? "#3498db" : "#e67e22";
-
-            L.circleMarker(coords, { 
-                radius: 9, 
-                fillColor: color, 
-                color: "#fff", 
-                weight: 2, 
-                fillOpacity: 1 
-            }).addTo(markersGroup).bindPopup(`<b>${el.tags.name || "Обект"}</b><br><small>${el.tags.tourism || el.tags.amenity || ""}</small>`);
-
-            const item = document.createElement('div');
-            item.className = 'poi-item';
-            item.innerHTML = `<strong>${el.tags.name || "Обект"}</strong>`;
-            item.onclick = () => map.flyTo(coords, 15);
-            list.appendChild(item);
-        });
-
-        if (elements.length === 0) {
-            list.innerHTML = '<p class="text-muted small text-center">Няма намерени обекти в този обхват.</p>';
+// Закачаме слушателите за Radio бутоните
+document.querySelectorAll('.poi-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+        if (!currentRouteGeometry) {
+            radio.checked = false;
+            alert("Първо изчислете маршрут!");
+            return;
         }
-    } catch (e) { console.error("POI Fetch Error:", e); }
-}
-
-// Поправен слушател за филтрите
-document.addEventListener('change', (e) => {
-    if (e.target.classList.contains('poi-check')) {
-        if (routeLayer) {
-            // Взимаме геометрията от слоя
-            const geo = routeLayer.toGeoJSON();
-            // Подаваме само geometry частта, за да е консистентно със сървъра
-            fetchPOIs(geo.features[0].geometry);
-        }
-    }
+        fetchPOIs();
+    });
 });
-
-function toggleTheme() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    document.getElementById('map').classList.toggle('dark-map-filter', isDark);
-    
-    // Сменяме и иконата на бутона, ако я имаш
-    const btn = document.getElementById('themeToggle');
-    if (btn) btn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
-}
 
 window.calculateRoute = calculateRoute;
 window.toggleTheme = toggleTheme;
