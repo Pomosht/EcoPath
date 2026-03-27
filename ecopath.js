@@ -1,106 +1,28 @@
-<<<<<<< HEAD
 const API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0=';
 
 var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
 var routeLayer = null;
 var markersGroup = L.layerGroup().addTo(map);
 
-// GEOGRAPHIC MAP TILES
-const standardTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap'
-});
+// СТИЛОВЕ НА КАРТАТА
+const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
+}).addTo(map);
 
 const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
     attribution: '&copy; OpenStreetMap &copy; CARTO'
 });
 
-const topoTiles = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: 'Map data: &copy; OpenStreetMap'
-});
-
-// Default layer
-standardTiles.addTo(map);
-
-// --- ЗАМЕНЕНА ЧАСТ: DARK MODE LOGIC ---
-function toggleDarkMode() {
-    const body = document.body;
-    const icon = document.getElementById('themeIcon');
-    
-    body.classList.toggle('dark-mode');
-    
-    const isDark = body.classList.contains('dark-mode');
-    
-    if (isDark) {
-        if (icon) icon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
-        localStorage.setItem('theme', 'dark');
-        
-        // Превключване на картата към Dark
-        map.removeLayer(standardTiles);
-        darkTiles.addTo(map);
-    } else {
-        if (icon) icon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
-        localStorage.setItem('theme', 'light');
-        
-        // Превключване на картата към Light
-        map.removeLayer(darkTiles);
-        standardTiles.addTo(map);
-    }
-
-    // Актуализиране на стила на маршрута ако съществува
-    if (routeLayer) {
-        routeLayer.setStyle({
-            color: isDark ? '#4ade80' : '#22c55e'
-        });
-    }
-}
-
-// Проверка за запазена тема при зареждане
-window.onload = () => {
-    if (localStorage.getItem('theme') === 'dark') {
-        toggleDarkMode();
-    }
+// ДАННИ ЗА КАТЕГОРИИ
+const typeConfig = {
+    'restaurant': { label: 'Ресторант', icon: '🍴', color: '#e63946' },
+    'cafe': { label: 'Кафене', icon: '☕', color: '#a67c52' },
+    'hotel': { label: 'Хотел', icon: '🏨', color: '#457b9d' },
+    'museum': { label: 'Музей', icon: '🏛️', color: '#2a9d8f' },
+    'church': { label: 'Храм', icon: '⛪', color: '#e9c46a' }
 };
-// --- КРАЙ НА ЗАМЕНЕНАТА ЧАСТ ---
 
-async function getCoords(city) {
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
-        const data = await res.json();
-        return data[0] ? { lat: data[0].lat, lon: data[0].lon } : null;
-    } catch(e) { return null; }
-}
-
-async function
-=======
-const API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0=';
-
-var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
-var routeLayer = null;
-var markersGroup = L.layerGroup().addTo(map);
-
-// GEOGRAPHIC MAP TILES - Clean OpenStreetMap style
-const standardTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
-
-const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-});
-
-const topoTiles = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)'
-});
-
-// Default to standard geographic view
-standardTiles.addTo(map);
-
-// Theme Toggle functionality
+// 1. ТЕМА (DARK MODE)
 const themeBtn = document.getElementById('themeToggle');
 if (themeBtn) {
     themeBtn.onclick = () => {
@@ -108,18 +30,22 @@ if (themeBtn) {
         const isDark = document.body.classList.contains('dark-mode');
         themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
         
-        // Switch map tiles based on theme
         if (isDark) {
-            map.removeLayer(standardTiles);
-            map.removeLayer(topoTiles);
+            map.removeLayer(lightTiles);
             darkTiles.addTo(map);
         } else {
             map.removeLayer(darkTiles);
-            standardTiles.addTo(map);
+            lightTiles.addTo(map);
+        }
+
+        // Обновяване на цвета на маршрута според темата
+        if (routeLayer) {
+            routeLayer.setStyle({ color: isDark ? '#4ade80' : '#2d6a4f' });
         }
     };
 }
 
+// 2. ГЕОКОДИРАНЕ
 async function getCoords(city) {
     try {
         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
@@ -128,7 +54,7 @@ async function getCoords(city) {
     } catch(e) { return null; }
 }
 
-// Calculate Route
+// 3. ИЗЧИСЛЯВАНЕ НА МАРШРУТ
 async function calculateRoute() {
     const loader = document.getElementById('loader');
     loader.style.display = 'block';
@@ -136,7 +62,11 @@ async function calculateRoute() {
     const start = await getCoords(document.getElementById('startInput').value);
     const end = await getCoords(document.getElementById('endInput').value);
 
-    if (!start || !end) { alert("Градът не е намерен!"); loader.style.display = 'none'; return; }
+    if (!start || !end) { 
+        alert("Градът не е намерен!"); 
+        loader.style.display = 'none'; 
+        return; 
+    }
 
     const transport = document.getElementById('transportMode').value;
     const profile = transport === 'bike' ? 'cycling-regular' : 'driving-car';
@@ -145,74 +75,62 @@ async function calculateRoute() {
         const response = await fetch(`https://api.openrouteservice.org/v2/directions/${profile}/geojson`, {
             method: 'POST',
             headers: { 'Authorization': API_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                coordinates: [[parseFloat(start.lon), parseFloat(start.lat)], [parseFloat(end.lon), parseFloat(end.lat)]]
-            })
+            body: JSON.stringify({ coordinates: [[parseFloat(start.lon), parseFloat(start.lat)], [parseFloat(end.lon), parseFloat(end.lat)]] })
         });
         const data = await response.json();
         
         if (routeLayer) map.removeLayer(routeLayer);
         markersGroup.clearLayers();
 
-        // Route styling - green dashed line
         const isDark = document.body.classList.contains('dark-mode');
         routeLayer = L.geoJSON(data, { 
             style: { 
-                color: isDark ? '#4ade80' : '#22c55e',
-                weight: 4,
-                opacity: 0.9,
-                dashArray: '8, 6',
-                lineCap: 'round',
-                lineJoin: 'round'
+                color: isDark ? '#4ade80' : '#2d6a4f', 
+                weight: 5,
+                dashArray: '10, 5' // Пунктирана линия за модерен вид
             } 
         }).addTo(map);
         
         map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
 
+        // Статистики
         const summary = data.features[0].properties.summary;
         const distKm = summary.distance / 1000;
         document.getElementById('distVal').innerText = Math.round(distKm);
         document.getElementById('timeVal').innerText = `${Math.floor(summary.duration/3600)}ч ${Math.floor((summary.duration%3600)/60)}м`;
 
-        // CO2 Calculation
+        // CO2 & Еко рейтинг
         let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.08 : transport === 'bike' ? 0 : 0.14;
         const co2 = distKm * factor;
         document.getElementById('co2Val').innerText = co2.toFixed(1);
 
-        // Eco Score
-        let score = 100;
-        if (transport !== 'bike') {
-            score = 100 - (co2 * 2.5); 
-            if (transport === 'bus' || transport === 'electric') score += 20;
-        }
-        
-        score = Math.max(10, Math.min(100, score));
-        
+        let score = transport === 'bike' ? 100 : Math.max(10, Math.min(100, 100 - (co2 * 2.5)));
         const bar = document.getElementById('scoreBar');
-        const scoreText = document.getElementById('scoreText');
         bar.style.width = score + "%";
-        scoreText.innerText = Math.round(score) + "%";
+        document.getElementById('scoreText').innerText = Math.round(score) + "%";
         
-        // Update badge color
-        scoreText.className = score > 75 ? 'badge bg-success' : score > 40 ? 'badge bg-warning text-dark' : 'badge bg-danger';
-        bar.className = score > 75 ? 'progress-bar bg-success' : score > 40 ? 'progress-bar bg-warning' : 'progress-bar bg-danger';
-
+        // Автоматично изтегляне на обекти
         fetchPOIs(data.features[0].geometry);
-    } catch (e) { console.error(e); } finally { loader.style.display = 'none'; }
+    } catch (e) { 
+        console.error(e); 
+    } finally { 
+        loader.style.display = 'none'; 
+    }
 }
 
-// Fetch POIs
+// 4. ОБЕКТИ ПО ПЪТЯ (POIs)
 async function fetchPOIs(routeGeo) {
     const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
     const list = document.getElementById('poiList');
+    
     if (!selected.length) { 
-        list.innerHTML = '<p class="text-muted small m-0 text-center">Изберете категория...</p>'; 
+        list.innerHTML = '<p class="text-center small text-muted">Изберете категория...</p>'; 
         markersGroup.clearLayers(); 
         return; 
     }
 
-    const totalPoints = routeGeo.coordinates.length;
-    const step = Math.max(1, Math.ceil(totalPoints / 40)); 
+    // Редукция на точки за API-то
+    const step = Math.max(1, Math.ceil(routeGeo.coordinates.length / 40)); 
     const simpleCoords = routeGeo.coordinates.filter((_, i) => i % step === 0);
 
     try {
@@ -221,59 +139,59 @@ async function fetchPOIs(routeGeo) {
             headers: { 'Authorization': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 request: "pois", 
-                geometry: { 
-                    geojson: { type: "LineString", coordinates: simpleCoords }, 
-                    buffer: 1000 
-                },
+                geometry: { geojson: { type: "LineString", coordinates: simpleCoords }, buffer: 1500 },
                 filters: { category_group_ids: selected }, 
-                limit: 40 
+                limit: 100 
             })
         });
         
         const data = await res.json();
-        
-        if (data.error || res.status === 400) {
-            list.innerHTML = '<p class="text-center text-danger small">Грешка в заявката (твърде дълъг път).</p>';
-            return;
-        }
-
         list.innerHTML = ''; 
         markersGroup.clearLayers();
         
-        if (!data.features || data.features.length === 0) {
-            list.innerHTML = '<p class="text-muted small m-0 text-center">Няма обекти в този радиус.</p>';
-            return;
+        if (!data.features?.length) { 
+            list.innerHTML = '<p class="text-center small text-muted">Няма открити обекти.</p>'; 
+            return; 
         }
 
         data.features.forEach(poi => {
-            const name = poi.properties.osm_tags?.name || poi.properties.osm_tags?.amenity || "Обект";
-            const coords = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
+            const tags = poi.properties.osm_tags || {};
+            const name = tags.name || tags.brand || tags['name:bg'] || tags.operator;
             
+            // ФИКС: Скриваме обекти без име
+            if (!name || name.length < 2) return;
+
+            const type = tags.amenity || tags.tourism || tags.religion || 'object';
+            const config = typeConfig[type] || { label: 'Обект', icon: '📍', color: '#f39c12' };
+            const coords = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
+
+            // Списък
             const div = document.createElement('div');
             div.className = 'poi-item'; 
-            div.innerHTML = `<strong>${name}</strong>`;
+            div.innerHTML = `<span>${config.icon}</span> <strong>${name}</strong><br><small class="text-muted ms-4">${config.label}</small>`;
             
             div.onclick = () => { 
                 map.flyTo(coords, 16); 
-                L.popup().setLatLng(coords).setContent(name).openOn(map); 
+                L.popup().setLatLng(coords).setContent(`<b>${config.icon} ${name}</b>`).openOn(map); 
             };
             list.appendChild(div);
             
-            // Blue markers
+            // Маркер
             L.circleMarker(coords, { 
-                radius: 7, 
-                fillColor: "#3b82f6", 
-                color: "#ffffff", 
+                radius: 8, 
+                fillColor: config.color, 
+                color: "#fff", 
                 weight: 2, 
                 fillOpacity: 0.9 
-            }).addTo(markersGroup);
+            }).addTo(markersGroup).bindPopup(`<b>${config.icon} ${name}</b>`);
         });
+
     } catch (e) { 
-        console.error("POI Error:", e);
-        list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане на обекти.</p>';
+        console.error("POI Fetch Error:", e);
     }
 }
 
+// Слушател за промяна на филтрите
 document.querySelectorAll('.poi-check').forEach(cb => {
     cb.onchange = () => {
         if (routeLayer) {
@@ -282,4 +200,3 @@ document.querySelectorAll('.poi-check').forEach(cb => {
         }
     };
 });
->>>>>>> fb045d714fc1b6511228987ced9bc6b0db50ef99
