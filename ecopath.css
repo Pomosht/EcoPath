@@ -1,0 +1,104 @@
+:root {
+    --primary-green: #2d6a4f;
+    --light-green: #d8f3dc;
+    --accent-green: #52b788;
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --border-color: #dee2e6;
+}
+
+body.dark-mode {
+    --bg-color: #1a1a2e;
+    --text-color: #e0e0e0;
+    --sidebar-bg: #16213e;
+    --card-bg: #0f3460;
+    --border-color: #2a2a40;
+}
+
+body {
+    font-family: sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    overflow: hidden;
+}
+
+.wrapper { display: flex; height: 100vh; width: 100vw; }
+
+.sidebar {
+    width: 320px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+#map { flex: 1; height: 100vh; background: #eee; }
+
+/* КАРТАТА - ТЪМЕН РЕЖИМ чрез CSS филтър */
+.dark-map-filter {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+/* Изключения за Popups в тъмен режим, за да не са инвертирани */
+.dark-map-filter .leaflet-popup-content-wrapper,
+.dark-map-filter .leaflet-popup-tip {
+    filter: invert(100%) hue-rotate(180deg);
+    background: #16213e;
+    color: white;
+}
+
+.search-box, .box, .poi-filters {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+}
+
+.btn-eco {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.poi-item {
+    padding: 8px;
+    margin-bottom: 5px;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.poi-item:hover { background: var(--light-green); color: black; }
+
+.stats-overlay {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.stat-card {
+    background: var(--sidebar-bg);
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.stat-card strong { display: block; font-size: 1.2rem; color: var(--accent-green); }
+.stat-card small { font-size: 0.7rem; color: #888; text-transform: uppercase; }
