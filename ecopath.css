@@ -25,6 +25,28 @@ body, html {
     border-right: 1px solid #dee2e6;
     z-index: 1001;
     overflow-y: auto;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Dark Mode Styles */
+body.dark-mode .sidebar {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    border-right-color: #333;
+}
+
+body.dark-mode .search-box, 
+body.dark-mode .box, 
+body.dark-mode .poi-container {
+    background-color: #2d2d2d !important;
+    color: white;
+}
+
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+    background-color: #3d3d3d;
+    border-color: #444;
+    color: white;
 }
 
 .search-box {
@@ -62,6 +84,11 @@ body, html {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+body.dark-mode .stats-overlay {
+    background: #1a1a1a;
+    color: white;
+}
+
 .stat-card { text-align: center; }
 
 .poi-item { 
@@ -73,10 +100,15 @@ body, html {
     border-radius: 6px;
     border-left: 4px solid var(--poi-orange);
     transition: background 0.2s;
+    color: #333;
 }
 
-.poi-item:hover { 
-    background: #fff3e0; 
+body.dark-mode .poi-item {
+    background: #3d3d3d;
+    color: #eee;
 }
+
+.poi-item:hover { background: #fff3e0; }
+body.dark-mode .poi-item:hover { background: #4d4d4d; }
 
 #loader { color: var(--eco-green); }
