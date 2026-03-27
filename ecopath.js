@@ -7,29 +7,20 @@ var markersGroup = L.layerGroup().addTo(map);
 const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
 
-// Обединяваме метаданните за икони и преводи на едно място
+// Конфигурация без църкви и с фокус върху Еко обекти
 const typeConfig = {
-    // Храна (Category 130)
-    'restaurant': { label: 'Ресторант', icon: '🍴', color: '#e63946' },
-    'cafe': { label: 'Кафене', icon: '☕', color: '#a67c52' },
-    'fast_food': { label: 'Бързо хранене', icon: '🍔', color: '#f4a261' },
-    'pub': { label: 'Пъб/Бар', icon: '🍺', color: '#e63946' },
-    // Хотели (Category 330)
-    'hotel': { label: 'Хотел', icon: '🏨', color: '#457b9d' },
-    'hostel': { label: 'Хостел', icon: '🛌', color: '#457b9d' },
-    'guest_house': { label: 'Къща за гости', icon: '🏠', color: '#457b9d' },
-    'motel': { label: 'Мотел', icon: '🚗', color: '#457b9d' },
-    'apartment': { label: 'Апартамент', icon: '🏢', color: '#457b9d' },
-    // Култура (Category 300)
-    'museum': { label: 'Музей', icon: '🏛️', color: '#2a9d8f' },
-    'gallery': { label: 'Галерия', icon: '🎨', color: '#2a9d8f' },
-    'castle': { label: 'Замък/Крепост', icon: '🏰', color: '#2a9d8f' },
-    // Религия (Category 210)
-    'place_of_worship': { label: 'Храм', icon: '⛪', color: '#e9c46a' },
-    'church': { label: 'Църква', icon: '⛪', color: '#e9c46a' }
+    'restaurant': { label: 'Еко Ресторант', icon: '🍏', color: '#2d6a4f' },
+    'cafe': { label: 'Био Кафене', icon: '☕', color: '#40916c' },
+    'hotel': { label: 'Еко Хотел', icon: '🌿', color: '#1b4332' },
+    'guest_house': { label: 'Къща за гости', icon: '🏠', color: '#1b4332' },
+    'museum': { label: 'Музей', icon: '🏛️', color: '#a67c52' },
+    'gallery': { label: 'Галерия', icon: '🎨', color: '#a67c52' },
+    'castle': { label: 'Замък/Крепост', icon: '🏰', color: '#a67c52' },
+    'park': { label: 'Парк/Природа', icon: '🌳', color: '#74c69d' },
+    'nature_reserve': { label: 'Еко пътека', icon: '🥾', color: '#74c69d' },
+    'viewpoint': { label: 'Гледка', icon: '🔭', color: '#74c69d' }
 };
 
-// 1. Theme Toggle
 const themeBtn = document.getElementById('themeToggle');
 if (themeBtn) {
     themeBtn.onclick = () => {
@@ -79,7 +70,7 @@ async function calculateRoute() {
         document.getElementById('distVal').innerText = Math.round(distKm);
         document.getElementById('timeVal').innerText = `${Math.floor(summary.duration/3600)}ч ${Math.floor((summary.duration%3600)/60)}м`;
 
-        let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.03 : transport === 'bike' ? 0 : 0.14;
+        let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.08 : transport === 'bike' ? 0 : 0.14;
         const co2 = distKm * factor;
         document.getElementById('co2Val').innerText = co2.toFixed(1);
 
@@ -93,10 +84,8 @@ async function calculateRoute() {
     } catch (e) { console.error(e); } finally { loader.style.display = 'none'; }
 }
 
-// 3. Fetch POIs - КОРИГИРАНА ВЕРСИЯ
 async function fetchPOIs(routeGeo) {
-    const selectedCheckboxes = Array.from(document.querySelectorAll('.poi-check:checked'));
-    const selectedIds = selectedCheckboxes.map(cb => parseInt(cb.value));
+    const selectedIds = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
     const list = document.getElementById('poiList');
     
     if (!selectedIds.length) { 
@@ -105,7 +94,6 @@ async function fetchPOIs(routeGeo) {
         return; 
     }
 
-    // Разреждаме точките, за да не гръмне API-то
     const step = Math.max(1, Math.ceil(routeGeo.coordinates.length / 40)); 
     const simpleCoords = routeGeo.coordinates.filter((_, i) => i % step === 0);
 
@@ -117,71 +105,36 @@ async function fetchPOIs(routeGeo) {
                 request: "pois", 
                 geometry: { geojson: { type: "LineString", coordinates: simpleCoords }, buffer: 1500 },
                 filters: { category_group_ids: selectedIds }, 
-                limit: 150 
+                limit: 100 
             })
         });
         
         const data = await res.json();
-        list.innerHTML = ''; 
-        markersGroup.clearLayers();
+        list.innerHTML = ''; markersGroup.clearLayers();
         
-        if (!data.features || data.features.length === 0) { 
-            list.innerHTML = '<p class="text-center small text-muted">Няма открити обекти.</p>'; 
-            return; 
+        if (!data.features || data.features.length === 0) {
+            list.innerHTML = '<p class="text-center small text-muted">Няма открити обекти.</p>';
+            return;
         }
-
-        let counter = 0;
 
         data.features.forEach(poi => {
             const tags = poi.properties.osm_tags || {};
-            
-            // 1. Търсим име - ако няма никакво име, пропускаме
-            const name = tags.name || tags.brand || tags['name:bg'] || tags.operator;
-            if (!name || name.length < 2) return;
-
-            // 2. Определяме типа (проверяваме amenity и tourism тагове)
-            const actualType = tags.amenity || tags.tourism || tags.religion || tags.historic || 'object';
-            const config = typeConfig[actualType] || { label: actualType.replace('_', ' '), icon: '📍', color: '#f39c12' };
+            const name = tags.name || tags['name:bg'] || "Еко обект";
+            const actualType = tags.tourism || tags.historic || tags.leisure || tags.amenity || 'object';
+            const config = typeConfig[actualType] || { label: 'Интересно място', icon: '📍', color: '#2d6a4f' };
 
             const coords = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
-            counter++;
-
-            // 3. Добавяме в страничния списък
             const div = document.createElement('div');
             div.className = 'poi-item'; 
             div.innerHTML = `<span>${config.icon}</span> <strong>${name}</strong><br><small class="text-muted ms-4">${config.label}</small>`;
-            
-            div.onclick = () => { 
-                map.flyTo(coords, 16); 
-                L.popup().setLatLng(coords).setContent(`${config.icon} <b>${name}</b>`).openOn(map); 
-            };
+            div.onclick = () => { map.flyTo(coords, 16); L.popup().setLatLng(coords).setContent(name).openOn(map); };
             list.appendChild(div);
             
-            // 4. Слагаме маркер на картата
-            L.circleMarker(coords, { 
-                radius: 9, 
-                fillColor: config.color, 
-                color: "#fff", 
-                weight: 2, 
-                fillOpacity: 0.9 
-            }).addTo(markersGroup).bindPopup(`${config.icon} <b>${name}</b><br>${config.label}`);
+            L.circleMarker(coords, { radius: 8, fillColor: config.color, color: "#fff", weight: 2, fillOpacity: 0.8 }).addTo(markersGroup);
         });
-
-        if (counter === 0) {
-            list.innerHTML = '<p class="text-center small text-muted">Няма именувани обекти в този обхват.</p>';
-        }
-
-    } catch (e) { 
-        console.error("POI Fetch Error:", e);
-        list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане на обекти.</p>';
-    }
+    } catch (e) { list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане.</p>'; }
 }
 
 document.querySelectorAll('.poi-check').forEach(cb => {
-    cb.onchange = () => {
-        if (routeLayer) {
-            const geo = routeLayer.toGeoJSON().features[0].geometry;
-            fetchPOIs(geo);
-        }
-    };
+    cb.onchange = () => routeLayer && fetchPOIs(routeLayer.toGeoJSON().features[0].geometry);
 });

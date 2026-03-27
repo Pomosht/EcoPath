@@ -53,19 +53,19 @@
             </div>
         </div>
 
-        <h6 class="mt-4 small fw-bold text-muted text-uppercase">Филтрирай обекти:</h6>
+        <h6 class="mt-4 small fw-bold text-muted text-uppercase">Филтрирай еко обекти:</h6>
         <div class="poi-filters border rounded p-2 bg-white mb-3">
             <div class="row g-2">
                 <div class="col-6">
                     <div class="form-check">
                         <input class="form-check-input poi-check" type="checkbox" value="130" id="checkRest">
-                        <label class="form-check-label small" for="checkRest">Храна 🍴</label>
+                        <label class="form-check-label small" for="checkRest">Еко Храна 🍏</label>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="form-check">
                         <input class="form-check-input poi-check" type="checkbox" value="330" id="checkHotel">
-                        <label class="form-check-label small" for="checkHotel">Спане 🏨</label>
+                        <label class="form-check-label small" for="checkHotel">Еко Спане 🌿</label>
                     </div>
                 </div>
                 <div class="col-6">
@@ -76,13 +76,32 @@
                 </div>
                 <div class="col-6">
                     <div class="form-check">
-                        <input class="form-check-input poi-check" type="checkbox" value="210" id="checkChurch">
-                        <label class="form-check-label small" for="checkChurch">Храмове ⛪</label>
+                        <input class="form-check-input poi-check" type="checkbox" value="620" id="checkEco">
+                        <label class="form-check-label small" for="checkEco">Еко пътеки 🥾</label>
                     </div>
                 </div>
             </div>
         </div>
 
+        <h6 class="small fw-bold text-muted">📍 ОБЕКТИ ПО ПЪТЯ:</h6>
+        <div id="poiList" class="poi-container border rounded bg-light p-2" style="max-height: 200px; overflow-y: auto;">
+            <p class="text-muted small m-0 text-center">Изберете категория...</p>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="stats-overlay">
+        <div class="stat-card"><small>Разстояние</small><br><strong id="distVal">0</strong> <small>км</small></div>
+        <div class="stat-card"><small>Време</small><br><strong id="timeVal">0ч 0м</strong></div>
+        <div class="stat-card"><small>CO₂</small><br><strong id="co2Val">0.0</strong> <small>кг</small></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="ecopath.js"></script>
+</body>
+</html>
         <h6 class="small fw-bold text-muted">📍 ОБЕКТИ ПО ПЪТЯ:</h6>
         <div id="poiList" class="poi-container border rounded bg-light p-2" style="max-height: 200px; overflow-y: auto;">
             <p class="text-muted small m-0 text-center">Изберете категория...</p>
