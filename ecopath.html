@@ -23,13 +23,13 @@
         <p class="text-muted small mb-4">Интелигентна еко-навигация</p>
 
         <div class="search-box">
-            <label class="small fw-bold text-muted">ОТ:</label>
+            <label class="small fw-bold text-muted text-uppercase">От:</label>
             <input type="text" id="startInput" class="form-control mb-2" value="Sofia, Bulgaria">
             
-            <label class="small fw-bold text-muted">ДО:</label>
+            <label class="small fw-bold text-muted text-uppercase">До:</label>
             <input type="text" id="endInput" class="form-control mb-2" value="Plovdiv, Bulgaria">
             
-            <label class="small fw-bold text-muted">ВИД ТРАНСПОРТ:</label>
+            <label class="small fw-bold text-muted text-uppercase">Вид транспорт:</label>
             <select id="transportMode" class="form-select mb-3">
                 <option value="car">🚗 Автомобил (Бензин/Дизел)</option>
                 <option value="electric">⚡ Електрически автомобил</option>
@@ -56,18 +56,36 @@
         </div>
 
         <h6 class="mt-4 small fw-bold text-muted text-uppercase">Филтрирай обекти:</h6>
-        <div class="poi-filters d-flex gap-3 mb-3">
-            <div class="form-check">
-                <input class="form-check-input poi-check" type="checkbox" value="130" id="checkRest">
-                <label class="form-check-label small" for="checkRest">Ресторанти</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input poi-check" type="checkbox" value="330" id="checkHotel">
-                <label class="form-check-label small" for="checkHotel">Хотели</label>
+        <div class="poi-filters border rounded p-2 bg-white mb-3">
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="form-check">
+                        <input class="form-check-input poi-check" type="checkbox" value="130" id="checkRest">
+                        <label class="form-check-label small" for="checkRest">Храна 🍴</label>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-check">
+                        <input class="form-check-input poi-check" type="checkbox" value="330" id="checkHotel">
+                        <label class="form-check-label small" for="checkHotel">Спане 🏨</label>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-check">
+                        <input class="form-check-input poi-check" type="checkbox" value="300" id="checkMuseum">
+                        <label class="form-check-label small" for="checkMuseum">Култура 🏛️</label>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-check">
+                        <input class="form-check-input poi-check" type="checkbox" value="210" id="checkChurch">
+                        <label class="form-check-label small" for="checkChurch">Храмове ⛪</label>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <h6 class="small fw-bold text-muted">📍 ОБЕКТИ ПО ПЪТЯ:</h6>
+        <h6 class="small fw-bold text-muted text-uppercase">📍 Обекти по пътя:</h6>
         <div id="poiList" class="poi-container border rounded bg-light p-2" style="max-height: 250px; overflow-y: auto;">
             <p class="text-muted small m-0 text-center">Изберете категория...</p>
         </div>
@@ -87,14 +105,14 @@
             <strong id="timeVal">0ч 0м</strong>
         </div>
         <div class="stat-card">
-            <small>CO₂</small>
-            <strong id="co2Val">0.0</strong>
-            <small>кг</small>
+            <small>CO₂</small><br>
+            <strong id="co2Val">0.0</strong> <small>кг</small>
         </div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="ecopath.js"></script>
+
 </body>
 </html>
