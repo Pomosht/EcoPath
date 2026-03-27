@@ -1,114 +1,112 @@
 <!DOCTYPE html>
 <html lang="bg">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoPath AI - Travel Edition</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="ecopath.css">
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<title>EcoPath AI - Travel Edition</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<link rel="stylesheet" href="ecopath.css">
+
+
+
 </head>
+
 <body>
 
 <div class="wrapper">
-    <div class="sidebar">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <h2 class="fw-bold m-0" style="color: #2d6a4f"><i class="bi bi-geo-alt-fill"></i> EcoPath AI</h2>
-            <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-moon-fill"></i>
-            </button>
-        </div>
-        <p class="text-muted small mb-4">Интелигентна еко-навигация</p>
 
-        <div class="search-box">
-            <label class="small fw-bold text-muted text-uppercase">От:</label>
-            <input type="text" id="startInput" class="form-control mb-2" value="Sofia, Bulgaria">
-            
-            <label class="small fw-bold text-muted text-uppercase">До:</label>
-            <input type="text" id="endInput" class="form-control mb-2" value="Plovdiv, Bulgaria">
-            
-            <label class="small fw-bold text-muted text-uppercase">Вид транспорт:</label>
-            <select id="transportMode" class="form-select mb-3">
-                <option value="car">🚗 Автомобил (Бензин/Дизел)</option>
-                <option value="electric">⚡ Електрически автомобил</option>
-                <option value="bus">🚌 Международен автобус</option>
-                <option value="bike">🚴 Велосипед</option>
-            </select>
+  <!-- SIDEBAR -->
+  <div class="sidebar mobile-sheet" id="mobileSheet">
 
-            <button class="btn-eco" id="routeBtn" onclick="calculateRoute()">
-                <i class="bi bi-calculator"></i> ПРЕСМЕТНИ ПЪТЯ
-            </button>
-            <div id="loader" class="mt-2 text-center" style="display:none">
-                <div class="spinner-border spinner-border-sm text-success"></div> <small>Анализиране...</small>
-            </div>
-        </div>
-
-        <div class="box mt-3">
-            <h6 class="fw-bold small text-muted text-uppercase">Екологичен рейтинг:</h6>
-            <div class="d-flex justify-content-between mb-2">
-                <span id="scoreText" class="badge bg-success">0%</span>
-            </div>
-            <div class="progress" style="height: 8px;">
-                <div id="scoreBar" class="progress-bar bg-success" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <h6 class="mt-4 small fw-bold text-muted text-uppercase">Филтрирай обекти:</h6>
-        <div class="poi-filters border rounded p-2 bg-white mb-3">
-            <div class="row g-2">
-                <div class="col-6">
-                    <div class="form-check">
-                        <input class="form-check-input poi-check" type="checkbox" value="130" id="checkRest">
-                        <label class="form-check-label small" for="checkRest">Храна 🍴</label>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="form-check">
-                        <input class="form-check-input poi-check" type="checkbox" value="330" id="checkHotel">
-                        <label class="form-check-label small" for="checkHotel">Спане 🏨</label>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="form-check">
-                        <input class="form-check-input poi-check" type="checkbox" value="300" id="checkMuseum">
-                        <label class="form-check-label small" for="checkMuseum">Култура 🏛️</label>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="form-check">
-                        <input class="form-check-input poi-check" type="checkbox" value="210" id="checkChurch">
-                        <label class="form-check-label small" for="checkChurch">Храмове ⛪</label>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <h6 class="small fw-bold text-muted text-uppercase">📍 Обекти по пътя:</h6>
-        <div id="poiList" class="poi-container border rounded bg-light p-2" style="max-height: 250px; overflow-y: auto;">
-            <p class="text-muted small m-0 text-center">Изберете категория...</p>
-        </div>
+    <div class="sheet-handle" id="sheetHandle">
+      <i class="bi bi-chevron-up" id="sheetIcon"></i>
     </div>
 
-    <div id="map"></div>
+    <div class="sheet-content">
 
-    <!-- Stats Overlay - Now at Top Right -->
-    <div class="stats-overlay">
-        <div class="stat-card">
-            <small>Разстояние</small>
-            <strong id="distVal">0</strong>
-            <small>км</small>
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <h2 class="fw-bold m-0" style="color: #2d6a4f">
+          <i class="bi bi-geo-alt-fill"></i> EcoPath AI
+        </h2>
+
+        <!-- THEME BUTTON -->
+        <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-moon-fill"></i>
+        </button>
+      </div>
+
+      <p class="text-muted small mb-4">Интелигентна еко-навигация</p>
+
+      <div class="search-box">
+        <label>От:</label>
+        <input type="text" id="startInput" class="form-control mb-2" value="Sofia, Bulgaria">
+
+        <label>До:</label>
+        <input type="text" id="endInput" class="form-control mb-2" value="Plovdiv, Bulgaria">
+
+        <label>Вид транспорт:</label>
+        <select id="transportMode" class="form-select mb-3">
+          <option value="car">🚗 Автомобил</option>
+          <option value="electric">⚡ Електрически</option>
+          <option value="bus">🚌 Автобус</option>
+          <option value="bike">🚴 Велосипед</option>
+        </select>
+
+        <button class="btn-eco" onclick="calculateRoute()">
+          <i class="bi bi-calculator"></i> ПРЕСМЕТНИ ПЪТЯ
+        </button>
+
+        <div id="loader" class="mt-2 text-center" style="display:none">
+          <div class="spinner-border spinner-border-sm text-success"></div>
+          <small>Анализиране...</small>
         </div>
-        <div class="stat-card">
-            <small>Време</small>
-            <strong id="timeVal">0ч 0м</strong>
+      </div>
+
+      <div class="box mt-3">
+        <h6 class="small text-muted">Екологичен рейтинг:</h6>
+        <span id="scoreText" class="badge bg-success">0%</span>
+
+        <div class="progress mt-2">
+          <div id="scoreBar" class="progress-bar" style="width:0%"></div>
         </div>
-        <div class="stat-card">
-            <small>CO₂</small><br>
-            <strong id="co2Val">0.0</strong> <small>кг</small>
-        </div>
+      </div>
+
+      <h6 class="mt-3 small text-muted">📍 Обекти:</h6>
+      <div id="poiList" class="poi-container">
+        <p class="text-muted small text-center">Изберете категория...</p>
+      </div>
+
     </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- STATS -->
+  <div class="stats-overlay">
+    <div class="stat-card">
+      <small>Разстояние</small>
+      <strong id="distVal">0</strong>
+      <small>км</small>
+    </div>
+
+    <div class="stat-card">
+      <small>Време</small>
+      <strong id="timeVal">0ч</strong>
+    </div>
+
+    <div class="stat-card">
+      <small>CO₂</small>
+      <strong id="co2Val">0</strong>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

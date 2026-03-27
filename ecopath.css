@@ -12,7 +12,7 @@
     --shadow-color: rgba(0,0,0,0.1);
 }
 
-/* Dark Mode Variables - BRIGHTER VERSION */
+/* Dark Mode Variables */
 body.dark-mode {
     --primary-green: #2d6a4f;
     --light-green: #1b4332;
@@ -162,6 +162,7 @@ body.dark-mode .btn-eco:hover {
     padding: 10px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .form-check-input:checked {
@@ -177,13 +178,21 @@ body.dark-mode .form-check-input:checked {
 /* POI List Container */
 .poi-container {
     background: var(--card-bg) !important;
-    border-color: var(--border-color) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+    transition: all 0.3s ease;
 }
 
+/* Dark mode styling */
 body.dark-mode .poi-container {
     background: #2d2d44 !important;
+    border-color: #4a4a6a !important;
 }
 
+/* POI Items */
 .poi-item {
     padding: 10px;
     margin-bottom: 8px;
@@ -214,24 +223,9 @@ body.dark-mode .poi-item:hover {
     transition: filter 0.3s ease;
 }
 
-/* Dark Map Filter - Makes light map darker but still visible */
 .dark-map-filter {
     filter: brightness(0.7) saturate(0.8) contrast(1.2) hue-rotate(200deg);
 }
-
-/* Alternative filter options (uncomment to use):
-.dark-map-filter-gray {
-    filter: brightness(0.7) contrast(1.2) grayscale(0.3);
-}
-
-.dark-map-filter-blue {
-    filter: brightness(0.6) contrast(1.3) sepia(0.3) hue-rotate(180deg) saturate(1.5);
-}
-
-.dark-map-filter-high-contrast {
-    filter: invert(0.9) hue-rotate(180deg) brightness(0.8);
-}
-*/
 
 /* Leaflet Dark Mode Overrides */
 body.dark-mode .leaflet-popup-content-wrapper,
@@ -244,7 +238,7 @@ body.dark-mode .leaflet-container {
     background: #1e1e2e;
 }
 
-/* Stats Overlay - TOP RIGHT */
+/* Stats Overlay */
 .stats-overlay {
     position: fixed;
     top: 20px;
@@ -298,48 +292,10 @@ body.dark-mode .stat-card strong {
     color: #52b788;
 }
 
-.stat-card small:last-child {
-    font-size: 0.75rem;
-    color: #6c757d;
-    display: inline;
-    margin-left: 2px;
-}
-
-body.dark-mode .stat-card small:last-child {
-    color: #a0a0b0;
-}
-
-/* Theme Toggle Button */
-#themeToggle {
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-body.dark-mode #themeToggle {
-    border-color: #4a4a6a;
-    color: #a0a0b0;
-}
-
-body.dark-mode #themeToggle:hover {
-    background-color: #363650;
-    border-color: var(--accent-green);
-    color: var(--accent-green);
-}
-
 /* Scrollbar Styling */
 .sidebar::-webkit-scrollbar,
 .poi-container::-webkit-scrollbar {
     width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track,
-.poi-container::-webkit-scrollbar-track {
-    background: transparent;
 }
 
 .sidebar::-webkit-scrollbar-thumb,
@@ -353,47 +309,6 @@ body.dark-mode .poi-container::-webkit-scrollbar-thumb {
     background: #4a4a6a;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 40vh;
-    }
-    
-    .wrapper {
-        flex-direction: column;
-    }
-    
-    #map {
-        height: 60vh;
-    }
-    
-    .stats-overlay {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-        justify-content: space-between;
-        gap: 8px;
-    }
-    
-    .stat-card {
-        flex: 1;
-        min-width: unset;
-        padding: 10px;
-    }
-    
-    .stat-card strong {
-        font-size: 1.1rem;
-    }
-}
-
-/* Badge Overrides */
-.badge {
-    font-size: 0.875rem;
-    padding: 0.5em 0.75em;
-}
-
 /* Leaflet Controls in Dark Mode */
 body.dark-mode .leaflet-control-zoom a {
     background-color: #2d2d44;
@@ -401,52 +316,70 @@ body.dark-mode .leaflet-control-zoom a {
     border-color: #4a4a6a;
 }
 
-body.dark-mode .leaflet-control-zoom a:hover {
-    background-color: #363650;
+
+
+/* ================= MOBILE BOTTOM SHEET ================= */
+
+.sheet-handle {
+  display: none;
 }
 
-/* Loading Spinner */
-.spinner-border.text-success {
-    color: var(--primary-green) !important;
-}
+/* MOBILE ONLY */
+@media (max-width: 768px) {
 
-body.dark-mode .spinner-border.text-success {
-    color: var(--accent-green) !important;
-}
+  .wrapper {
+    flex-direction: column;
+  }
 
-/* Ensure stats don't overlap with zoom controls on map */
-.leaflet-top.leaflet-right {
-    margin-top: 80px;
-}
+  #map {
+    height: 100vh;
+    width: 100%;
+  }
 
+  .mobile-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 65vh;
+    background: var(--sidebar-bg);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(70%);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+  }
 
-/* Добави това към твоя CSS файл */
-/* Ярки елементи в списъка */
-.poi-item {
-    background: var(--card-bg) !important;
-    margin-bottom: 10px;
-    border-radius: 8px !important;
-    box-shadow: 2px 2px 10px var(--shadow-color);
-    transition: all 0.3s ease;
-}
+  .mobile-sheet.open {
+    transform: translateY(0%);
+  }
 
-.poi-item:hover {
-    background: var(--light-green) !important;
-    transform: scale(1.02);
-}
-
-/* Стил за маршрута върху картата */
-.leaflet-interactive {
-    filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.3));
-}
-
-body.dark-mode .leaflet-interactive {
-    filter: drop-shadow(0px 0px 8px #00ff88);
-}
-
-/* Спинърът за зареждане да е по-забележим */
-#loader {
-    border-radius: 50%;
+  .sheet-handle {
+    display: flex;
+    justify-content: center;
     padding: 10px;
-    background: rgba(255,255,255,0.8);
+    cursor: pointer;
+  }
+
+  .sheet-handle i {
+    font-size: 20px;
+  }
+
+  .sheet-content {
+    overflow-y: auto;
+    padding: 15px;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    padding: 0;
+  }
+
+  .stats-overlay {
+    flex-direction: column;
+    top: 10px;
+    right: 10px;
+  }
 }
