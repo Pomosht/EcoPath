@@ -30,12 +30,18 @@ if (themeBtn) {
         const isDark = document.body.classList.contains('dark-mode');
         themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
         
+        // Switch map tiles based on theme
         if (isDark) {
-            map.removeLayer(lightTiles);
-            darkTiles.addTo(map);
+            map.removeLayer(standardTiles);
+            // Use filtered light tiles for better visibility instead of pure dark
+            positronTiles.addTo(map);
+            // Add CSS filter to make it slightly darker but still visible
+            document.getElementById('map').classList.add('dark-map-filter');
         } else {
+            map.removeLayer(positronTiles);
             map.removeLayer(darkTiles);
-            lightTiles.addTo(map);
+            standardTiles.addTo(map);
+            document.getElementById('map').classList.remove('dark-map-filter');
         }
 
         // Обновяване на цвета на маршрута според темата
@@ -122,9 +128,8 @@ async function calculateRoute() {
 async function fetchPOIs(routeGeo) {
     const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
     const list = document.getElementById('poiList');
-    
     if (!selected.length) { 
-        list.innerHTML = '<p class="text-center small text-muted">Изберете категория...</p>'; 
+        list.innerHTML = '<p class="text-muted small m-0 text-center">Изберете категория...</p>'; 
         markersGroup.clearLayers(); 
         return; 
     }
