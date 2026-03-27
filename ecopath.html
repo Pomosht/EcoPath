@@ -1,100 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <title>Eco-Travel: Rome to Sofia</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoPath AI - Travel Edition</title>
     
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; }
-        
-        /* Left Panel: Info & Eco-Meter */
-        #sidebar { width: 400px; background: #f9fbf9; padding: 25px; box-shadow: 2px 0 10px rgba(0,0,0,0.1); overflow-y: auto; z-index: 1000; }
-        
-        /* Right Panel: The World Map */
-        #map { flex-grow: 1; height: 100%; }
-
-        /* Eco-Meter Style */
-        .eco-card { background: white; border-radius: 15px; padding: 20px; border-left: 8px solid #4CAF50; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .eco-score { font-size: 32px; font-weight: bold; color: #2E7D32; }
-        
-        .stop-item { border-bottom: 1px solid #ddd; padding: 10px 0; }
-        .stop-item h4 { margin: 5px 0; color: #333; }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="ecopath.css">
 </head>
 <body>
 
-    <div id="sidebar">
-        <h2>Your Journey 🌍</h2>
-        <p><strong>Route:</strong> Rome ➔ Sofia</p>
+<div class="wrapper">
+    <div class="sidebar">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h2 class="fw-bold m-0" style="color: #2d6a4f"><i class="bi bi-geo-alt-fill"></i> EcoPath AI</h2>
+            <button id="themeToggle" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-moon-fill"></i>
+            </button>
+        </div>
+        <p class="text-muted small mb-4">Интелигентна еко-навигация</p>
 
-        <div class="eco-card">
-            <span>Eco-Efficiency Score:</span>
-            <div class="eco-score" id="score">82%</div>
-            <p><small id="eco-advice">Great choice! Taking the ferry/train reduces your CO2 by 60% compared to flying.</small></p>
+        <div class="search-box">
+            <label class="small fw-bold text-muted">ОТ:</label>
+            <input type="text" id="startInput" class="form-control mb-2" value="Sofia, Bulgaria">
+            
+            <label class="small fw-bold text-muted">ДО:</label>
+            <input type="text" id="endInput" class="form-control mb-2" value="Plovdiv, Bulgaria">
+            
+            <label class="small fw-bold text-muted">ВИД ТРАНСПОРТ:</label>
+            <select id="transportMode" class="form-select mb-3">
+                <option value="car">🚗 Автомобил (Бензин/Дизел)</option>
+                <option value="electric">⚡ Електрически автомобил</option>
+                <option value="bus">🚌 Международен автобус</option>
+                <option value="bike">🚴 Велосипед</option>
+            </select>
+
+            <button class="btn-eco" id="routeBtn" onclick="calculateRoute()">
+                <i class="bi bi-calculator"></i> ПРЕСМЕТНИ ПЪТЯ
+            </button>
+            <div id="loader" class="mt-2 text-center" style="display:none">
+                <div class="spinner-border spinner-border-sm text-success"></div> <small>Анализиране...</small>
+            </div>
         </div>
 
-        <hr>
+        <div class="box mt-3">
+            <h6 class="fw-bold small text-muted text-uppercase">Екологичен рейтинг:</h6>
+            <div class="d-flex justify-content-between mb-2">
+                <span id="scoreText" class="badge bg-success">0%</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div id="scoreBar" class="progress-bar bg-success" style="width: 0%"></div>
+            </div>
+        </div>
 
-        <h3>Top Stops Along the Way</h3>
-        <div id="stops-list">
-            <div class="stop-item">
-                <h4>📍 Bari, Italy</h4>
-                <p><small>Perfect place to catch the ferry to the Balkans. Stay at "Eco-Hotel Bari".</small></p>
+        <h6 class="mt-4 small fw-bold text-muted text-uppercase">Филтрирай обекти:</h6>
+        <div class="poi-filters d-flex gap-3 mb-3">
+            <div class="form-check">
+                <input class="form-check-input poi-check" type="checkbox" value="130" id="checkRest">
+                <label class="form-check-label small" for="checkRest">Ресторанти</label>
             </div>
-            <div class="stop-item">
-                <h4>📍 Dubrovnik, Croatia</h4>
-                <p><small>Visit the Old Town walls. UNESCO Heritage site.</small></p>
+            <div class="form-check">
+                <input class="form-check-input poi-check" type="checkbox" value="330" id="checkHotel">
+                <label class="form-check-label small" for="checkHotel">Хотели</label>
             </div>
-            <div class="stop-item">
-                <h4>📍 Belgrade, Serbia</h4>
-                <p><small>The "Gate of the Balkans". Visit the Kalemegdan Fortress.</small></p>
-            </div>
+        </div>
+
+        <h6 class="small fw-bold text-muted">📍 ОБЕКТИ ПО ПЪТЯ:</h6>
+        <div id="poiList" class="poi-container border rounded bg-light p-2" style="max-height: 250px; overflow-y: auto;">
+            <p class="text-muted small m-0 text-center">Изберете категория...</p>
         </div>
     </div>
 
     <div id="map"></div>
 
-    <script>
-        // 1. Initialize the Map
-        const map = L.map('map').setView([41.9028, 12.4964], 5); // Focused on Europe
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
+    <div class="stats-overlay">
+        <div class="stat-card">
+            <small>Разстояние</small><br>
+            <strong id="distVal">0</strong> <small>км</small>
+        </div>
+        <div class="stat-card">
+            <small>Време</small><br>
+            <strong id="timeVal">0ч 0м</strong>
+        </div>
+        <div class="stat-card">
+            <small>CO₂</small><br>
+            <strong id="co2Val">0.0</strong> <small>кг</small>
+        </div>
+    </div>
+</div>
 
-        // 2. Add Route Markers
-        const rome = L.marker([41.9028, 12.4964]).addTo(map).bindPopup("<b>Rome</b> (Start)");
-        const sofia = L.marker([42.6977, 23.3219]).addTo(map).bindPopup("<b>Sofia</b> (Destination)");
-        const bari = L.marker([41.1171, 16.8719]).addTo(map).bindPopup("<b>Bari</b> (Recommended Stop)");
-
-        // 3. Draw a "Travel Line" (Simplified)
-        const travelPath = L.polyline([
-            [41.9028, 12.4964], // Rome
-            [41.1171, 16.8719], // Bari
-            [42.6507, 18.0944], // Dubrovnik
-            [44.7866, 20.4489], // Belgrade
-            [42.6977, 23.3219]  // Sofia
-        ], {color: '#4CAF50', weight: 4, dashArray: '10, 10'}).addTo(map);
-
-        // 4. Custom Logic for the Eco-Meter
-        // In a real app, this would change based on "Car", "Train", or "Plane" inputs
-        function updateEcoStatus(mode) {
-            const scoreEl = document.getElementById('score');
-            const adviceEl = document.getElementById('eco-advice');
-            
-            if(mode === 'train') {
-                scoreEl.innerText = "95%";
-                adviceEl.innerText = "Fantastic! You are a climate hero.";
-            } else {
-                scoreEl.innerText = "40%";
-                adviceEl.innerText = "Consider using public transit to improve your score.";
-            }
-        }
-    </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="ecopath.js"></script>
 </body>
 </html>
-
-
-

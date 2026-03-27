@@ -1,38 +1,404 @@
-<style>
-    /* Премахваме излишните разстояния */
-    body, html { margin: 0; padding: 0; height: 100%; font-family: 'Arial', sans-serif; }
+/* === ECOPATH CSS - Geographic Map Style with Dark Mode === */
 
-    .main-container { display: flex; height: 100vh; }
+:root {
+    --primary-green: #2d6a4f;
+    --light-green: #d8f3dc;
+    --accent-green: #52b788;
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --sidebar-bg: #ffffff;
+    --card-bg: #ffffff;
+    --border-color: #dee2e6;
+    --map-filter: none;
+    --shadow-color: rgba(0,0,0,0.1);
+}
 
-    /* Страничният панел */
-    .sidebar { 
-        width: 350px; 
-        background: #2d3436; 
-        color: white; 
-        padding: 20px;
-        display: flex;
+/* Dark Mode Variables - BRIGHTER VERSION */
+body.dark-mode {
+    --primary-green: #2d6a4f;
+    --light-green: #1b4332;
+    --accent-green: #52b788;
+    --bg-color: #1e1e2e;
+    --text-color: #eaeaea;
+    --sidebar-bg: #252535;
+    --card-bg: #2d2d44;
+    --border-color: #3d3d5c;
+    --map-filter: brightness(0.9) contrast(1.1);
+    --shadow-color: rgba(0,0,0,0.3);
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow: hidden;
+}
+
+/* Layout */
+.wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    overflow-y: auto;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar h2 {
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+.sidebar .text-muted {
+    color: #6c757d !important;
+}
+
+body.dark-mode .sidebar .text-muted {
+    color: #a0a0b0 !important;
+}
+
+/* Search Box */
+.search-box {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.search-box label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.form-control, .form-select {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #363650;
+    color: #eaeaea;
+    border-color: #4a4a6a;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: #363650;
+    color: #eaeaea;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 0.2rem rgba(82, 183, 136, 0.25);
+}
+
+/* Eco Button */
+.btn-eco {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary-green), var(--accent-green));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-eco:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.4);
+}
+
+body.dark-mode .btn-eco:hover {
+    box-shadow: 0 4px 12px rgba(82, 183, 136, 0.4);
+}
+
+/* Stats Box */
+.box {
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+/* Progress Bar */
+.progress {
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease, background-color 0.3s ease;
+}
+
+/* POI Section */
+.poi-filters {
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+body.dark-mode .form-check-input:checked {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+/* POI List Container */
+.poi-container {
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .poi-container {
+    background: #2d2d44 !important;
+}
+
+.poi-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    background: var(--bg-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+body.dark-mode .poi-item {
+    background: #363650;
+}
+
+.poi-item:hover {
+    background: var(--light-green);
+    transform: translateX(4px);
+}
+
+body.dark-mode .poi-item:hover {
+    background: #1b4332;
+}
+
+/* Map Container */
+#map {
+    flex: 1;
+    height: 100vh;
+    filter: var(--map-filter);
+    transition: filter 0.3s ease;
+}
+
+/* Leaflet Dark Mode Overrides */
+body.dark-mode .leaflet-popup-content-wrapper,
+body.dark-mode .leaflet-popup-tip {
+    background: #2d2d44;
+    color: #eaeaea;
+}
+
+body.dark-mode .leaflet-container {
+    background: #1e1e2e;
+}
+
+/* Stats Overlay - MOVED TO TOP RIGHT */
+.stats-overlay {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
+    flex-direction: row;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    padding: 15px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px var(--shadow-color);
+    min-width: 100px;
+    text-align: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+body.dark-mode .stat-card {
+    background: rgba(45, 45, 68, 0.85);
+    box-shadow: 0 4px 20px var(--shadow-color);
+    border: 1px solid #4a4a6a;
+}
+
+.stat-card small {
+    color: #6c757d;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+body.dark-mode .stat-card small {
+    color: #a0a0b0;
+}
+
+.stat-card strong {
+    font-size: 1.4rem;
+    color: var(--primary-green);
+    font-weight: 700;
+    display: block;
+}
+
+body.dark-mode .stat-card strong {
+    color: #52b788;
+}
+
+.stat-card small:last-child {
+    font-size: 0.75rem;
+    color: #6c757d;
+    display: inline;
+    margin-left: 2px;
+}
+
+body.dark-mode .stat-card small:last-child {
+    color: #a0a0b0;
+}
+
+/* Theme Toggle Button */
+#themeToggle {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode #themeToggle {
+    border-color: #4a4a6a;
+    color: #a0a0b0;
+}
+
+body.dark-mode #themeToggle:hover {
+    background-color: #363650;
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+}
+
+/* Scrollbar Styling */
+.sidebar::-webkit-scrollbar,
+.poi-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.poi-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.poi-container::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+body.dark-mode .sidebar::-webkit-scrollbar-thumb,
+body.dark-mode .poi-container::-webkit-scrollbar-thumb {
+    background: #4a4a6a;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+    }
+    
+    .wrapper {
         flex-direction: column;
-        gap: 20px;
     }
-
-    .card { background: #3d4446; padding: 15px; border-radius: 12px; }
-
-    /* Дизайн на еко-метъра */
-    .meter-container { 
-        background: #eee; 
-        border-radius: 20px; 
-        height: 25px; 
-        overflow: hidden; 
-        margin: 10px 0;
+    
+    #map {
+        height: 60vh;
     }
-    #eco-bar { 
-        background: linear-gradient(90deg, #4caf50, #8bc34a); 
-        height: 100%; 
-        text-align: center; 
-        color: white; 
-        font-weight: bold;
+    
+    .stats-overlay {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        justify-content: space-between;
+        gap: 8px;
     }
+    
+    .stat-card {
+        flex: 1;
+        min-width: unset;
+        padding: 10px;
+    }
+    
+    .stat-card strong {
+        font-size: 1.1rem;
+    }
+}
 
-    /* Картата запълва останалото място */
-    #map { flex: 1; }
-</style>
+/* Badge Overrides */
+.badge {
+    font-size: 0.875rem;
+    padding: 0.5em 0.75em;
+}
+
+/* Leaflet Controls in Dark Mode */
+body.dark-mode .leaflet-control-zoom a {
+    background-color: #2d2d44;
+    color: #eaeaea;
+    border-color: #4a4a6a;
+}
+
+body.dark-mode .leaflet-control-zoom a:hover {
+    background-color: #363650;
+}
+
+/* Loading Spinner */
+.spinner-border.text-success {
+    color: var(--primary-green) !important;
+}
+
+body.dark-mode .spinner-border.text-success {
+    color: var(--accent-green) !important;
+}
+
+/* Ensure stats don't overlap with zoom controls on map */
+.leaflet-top.leaflet-right {
+    margin-top: 80px;
+}
