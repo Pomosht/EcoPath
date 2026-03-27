@@ -1,4 +1,5 @@
-/* === ECOPATH CSS - Geographic Map Style with Dark Mode === */
+
+/* === ECOPATH CSS - Geographic Map Style with Dark Mode === /*
 
 :root {
     --primary-green: #2d6a4f;
@@ -402,3 +403,117 @@ body.dark-mode .spinner-border.text-success {
 .leaflet-top.leaflet-right {
     margin-top: 80px;
 }
+=======
+:root { 
+    --eco-green: #2d6a4f; 
+    --eco-light: #e8f5e9; 
+    --poi-orange: #f39c12;
+}
+
+body, html { 
+    margin: 0; 
+    padding: 0;
+    height: 100%; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    overflow: hidden; 
+}
+
+.wrapper { 
+    display: flex; 
+    height: 100vh; 
+}
+
+.sidebar { 
+    width: 320px; 
+    background-color: #f8f9fa; 
+    padding: 20px; 
+    box-sizing: border-box; 
+    border-right: 1px solid #dee2e6;
+    z-index: 1001;
+    overflow-y: auto;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Dark Mode Styles */
+body.dark-mode .sidebar {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    border-right-color: #333;
+}
+
+body.dark-mode .search-box, 
+body.dark-mode .box, 
+body.dark-mode .poi-container {
+    background-color: #2d2d2d !important;
+    color: white;
+}
+
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+    background-color: #3d3d3d;
+    border-color: #444;
+    color: white;
+}
+
+.search-box {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.btn-eco {
+    width: 100%;
+    background-color: var(--eco-green);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn-eco:hover { background-color: #1b4332; }
+
+#map { flex: 1; height: 100%; }
+
+.stats-overlay {
+    position: absolute; 
+    top: 20px; 
+    right: 20px; 
+    z-index: 1000;
+    background: white; 
+    padding: 12px 20px; 
+    border-radius: 12px;
+    display: flex; 
+    gap: 20px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .stats-overlay {
+    background: #1a1a1a;
+    color: white;
+}
+
+.stat-card { text-align: center; }
+
+.poi-item { 
+    font-size: 0.85rem; 
+    padding: 8px 12px; 
+    margin-bottom: 5px;
+    cursor: pointer;
+    background: white;
+    border-radius: 6px;
+    border-left: 4px solid var(--poi-orange);
+    transition: background 0.2s;
+    color: #333;
+}
+
+body.dark-mode .poi-item {
+    background: #3d3d3d;
+    color: #eee;
+}
+
+.poi-item:hover { background: #fff3e0; }
+body.dark-mode .poi-item:hover { background: #4d4d4d; }
+#loader { color: var(--eco-green); }

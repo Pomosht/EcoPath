@@ -1,29 +1,31 @@
+
 const API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0=';
 
+// 1. Инициализация на картата
 var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
 var routeLayer = null;
 var markersGroup = L.layerGroup().addTo(map);
 
-// GEOGRAPHIC MAP TILES - Clean OpenStreetMap style
-const standardTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
+const lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
 
-const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-});
+// --- ДИНАМИЧНИ СТИЛОВЕ ЗА ТЕМАТА ---
+const themeStyles = document.createElement('style');
+themeStyles.innerHTML = `
+    body.dark-mode { background-color: #121212; color: #ffffff; }
+    body.dark-mode .sidebar, body.dark-mode .card { background-color: #1e1e1e !important; border-color: #333 !important; }
+    body.dark-mode h4, body.dark-mode h5, body.dark-mode label, 
+    body.dark-mode .poi-item strong, body.dark-mode #poiList p { color: #ffffff !important; }
+    body:not(.dark-mode) h4, body:not(.dark-mode) h5, body:not(.dark-mode) label,
+    body:not(.dark-mode) .poi-item strong { color: #000000 !important; }
+    .poi-item { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; transition: 0.2s; }
+    body.dark-mode .poi-item { border-bottom-color: #444; }
+    body.dark-mode .poi-item:hover { background-color: #333; }
+    body.dark-mode input, body.dark-mode select { background-color: #2c2c2c !important; color: white !important; border: 1px solid #444 !important; }
+`;
+document.head.appendChild(themeStyles);
 
-const topoTiles = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)'
-});
-
-// Default to standard geographic view
-standardTiles.addTo(map);
-
-// Theme Toggle functionality
+// 2. Theme Toggle
 const themeBtn = document.getElementById('themeToggle');
 if (themeBtn) {
     themeBtn.onclick = () => {
@@ -31,14 +33,12 @@ if (themeBtn) {
         const isDark = document.body.classList.contains('dark-mode');
         themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
         
-        // Switch map tiles based on theme
         if (isDark) {
-            map.removeLayer(standardTiles);
-            map.removeLayer(topoTiles);
+            map.removeLayer(lightTiles);
             darkTiles.addTo(map);
         } else {
             map.removeLayer(darkTiles);
-            standardTiles.addTo(map);
+            lightTiles.addTo(map);
         }
     };
 }
@@ -51,15 +51,22 @@ async function getCoords(city) {
     } catch(e) { return null; }
 }
 
-// Calculate Route
+// 3. Calculate Route
 async function calculateRoute() {
     const loader = document.getElementById('loader');
-    loader.style.display = 'block';
+    if(loader) loader.style.display = 'block';
     
-    const start = await getCoords(document.getElementById('startInput').value);
-    const end = await getCoords(document.getElementById('endInput').value);
+    const startValue = document.getElementById('startInput').value;
+    const endValue = document.getElementById('endInput').value;
+    
+    const start = await getCoords(startValue);
+    const end = await getCoords(endValue);
 
-    if (!start || !end) { alert("Градът не е намерен!"); loader.style.display = 'none'; return; }
+    if (!start || !end) { 
+        alert("Градът не е намерен!"); 
+        if(loader) loader.style.display = 'none'; 
+        return; 
+    }
 
     const transport = document.getElementById('transportMode').value;
     const profile = transport === 'bike' ? 'cycling-regular' : 'driving-car';
@@ -69,7 +76,7 @@ async function calculateRoute() {
             method: 'POST',
             headers: { 'Authorization': API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                coordinates: [[parseFloat(start.lon), parseFloat(start.lat)], [parseFloat(end.lon), parseFloat(end.lat)]]
+                coordinates: [[parseFloat(start.lon), parseFloat(start.lat)], [parseFloat(end.lon), parseFloat(end.lat)]] 
             })
         });
         const data = await response.json();
@@ -77,17 +84,8 @@ async function calculateRoute() {
         if (routeLayer) map.removeLayer(routeLayer);
         markersGroup.clearLayers();
 
-        // Route styling - green dashed line
-        const isDark = document.body.classList.contains('dark-mode');
         routeLayer = L.geoJSON(data, { 
-            style: { 
-                color: isDark ? '#4ade80' : '#22c55e',
-                weight: 4,
-                opacity: 0.9,
-                dashArray: '8, 6',
-                lineCap: 'round',
-                lineJoin: 'round'
-            } 
+            style: { color: '#2d6a4f', weight: 5, dashArray: '8, 6' } 
         }).addTo(map);
         
         map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
@@ -97,39 +95,39 @@ async function calculateRoute() {
         document.getElementById('distVal').innerText = Math.round(distKm);
         document.getElementById('timeVal').innerText = `${Math.floor(summary.duration/3600)}ч ${Math.floor((summary.duration%3600)/60)}м`;
 
-        // CO2 Calculation
+        // Еко изчисления
         let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.03 : transport === 'bike' ? 0 : 0.14;
         const co2 = distKm * factor;
         document.getElementById('co2Val').innerText = co2.toFixed(1);
 
-        // Eco Score
         let score = 100;
         if (transport !== 'bike') {
             score = 100 - (co2 * 2.5); 
             if (transport === 'bus' || transport === 'electric') score += 20;
         }
-        
         score = Math.max(10, Math.min(100, score));
         
         const bar = document.getElementById('scoreBar');
         const scoreText = document.getElementById('scoreText');
         bar.style.width = score + "%";
         scoreText.innerText = Math.round(score) + "%";
-        
-        // Update badge color
-        scoreText.className = score > 75 ? 'badge bg-success' : score > 40 ? 'badge bg-warning text-dark' : 'badge bg-danger';
-        bar.className = score > 75 ? 'progress-bar bg-success' : score > 40 ? 'progress-bar bg-warning' : 'progress-bar bg-danger';
+        bar.style.backgroundColor = score > 75 ? "#2d6a4f" : score > 40 ? "#f39c12" : "#d9534f";
 
         fetchPOIs(data.features[0].geometry);
-    } catch (e) { console.error(e); } finally { loader.style.display = 'none'; }
+    } catch (e) { 
+        console.error(e); 
+    } finally { 
+        if(loader) loader.style.display = 'none'; 
+    }
 }
 
-// Fetch POIs
+// 4. Fetch POIs (Оптимизирано)
 async function fetchPOIs(routeGeo) {
     const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
     const list = document.getElementById('poiList');
+    
     if (!selected.length) { 
-        list.innerHTML = '<p class="text-muted small m-0 text-center">Изберете категория...</p>'; 
+        list.innerHTML = '<p class="text-center small text-muted">Изберете категория...</p>'; 
         markersGroup.clearLayers(); 
         return; 
     }
@@ -164,7 +162,7 @@ async function fetchPOIs(routeGeo) {
         markersGroup.clearLayers();
         
         if (!data.features || data.features.length === 0) {
-            list.innerHTML = '<p class="text-muted small m-0 text-center">Няма обекти в този радиус.</p>';
+            list.innerHTML = '<p class="text-center small text-muted">Няма обекти в този радиус.</p>';
             return;
         }
 
@@ -175,28 +173,27 @@ async function fetchPOIs(routeGeo) {
             const div = document.createElement('div');
             div.className = 'poi-item'; 
             div.innerHTML = `<strong>${name}</strong>`;
-            
             div.onclick = () => { 
                 map.flyTo(coords, 16); 
                 L.popup().setLatLng(coords).setContent(name).openOn(map); 
             };
             list.appendChild(div);
             
-            // Blue markers
             L.circleMarker(coords, { 
                 radius: 7, 
-                fillColor: "#3b82f6", 
-                color: "#ffffff", 
+                fillColor: "#f39c12", 
+                color: "#fff", 
                 weight: 2, 
                 fillOpacity: 0.9 
             }).addTo(markersGroup);
         });
     } catch (e) { 
         console.error("POI Error:", e);
-        list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане на обекти.</p>';
+        list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане.</p>';
     }
 }
 
+// 5. Event Listeners
 document.querySelectorAll('.poi-check').forEach(cb => {
     cb.onchange = () => {
         if (routeLayer) {
