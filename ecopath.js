@@ -60,7 +60,7 @@ async function calculateRoute() {
         document.getElementById('timeVal').innerText = `${Math.floor(summary.duration/3600)}ч ${Math.floor((summary.duration%3600)/60)}м`;
 
         // КОРЕКЦИЯ НА ЕКО РЕЙТИНГА: По-реалистична скала
-        let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.03 : transport === 'bike' ? 0 : 0.14;
+        let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.08 : transport === 'bike' ? 0 : 0.14;
         const co2 = distKm * factor;
         document.getElementById('co2Val').innerText = co2.toFixed(1);
 
