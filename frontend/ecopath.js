@@ -1,105 +1,83 @@
 let map, routeLayer, markersGroup;
 
-// 1. Инициализация на картата
-if (!window.mapInitialized) {
-    map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
-    markersGroup = L.layerGroup().addTo(map);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    window.mapInitialized = true;
-}
+// Инициализация
+map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
+markersGroup = L.layerGroup().addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-// 2. Функция за взимане на координати
 async function getCoords(city) {
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
-        const data = await res.json();
-        if (data && data.length > 0) {
-            return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-        }
-        return null;
-    } catch (e) {
-        console.error("Грешка при геокодиране:", e);
-        return null;
-    }
+    const res = await fetch(`/api/geocode?q=${encodeURIComponent(city)}`);
+    const data = await res.json();
+    return data[0] ? { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) } : null;
 }
 
-// 3. ОСНОВНАТА ФУНКЦИЯ (Фикс за 'start is not defined')
 async function calculateRoute() {
-    // Взимаме стойностите от полетата
-    const startInput = document.getElementById('startInput').value;
-    const endInput = document.getElementById('endInput').value;
+    const loader = document.getElementById('loader');
+    if (loader) loader.style.display = 'block';
+
+    const start = await getCoords(document.getElementById('startInput').value);
+    const end = await getCoords(document.getElementById('endInput').value);
     const transport = document.getElementById('transportMode').value;
 
-    if (!startInput || !endInput) {
-        alert("Моля, попълнете и двете полета!");
-        return;
-    }
-
-    // ТУК ДЕФИНИРАМЕ start И end ПРЕДИ TRY БЛОКА
-    const start = await getCoords(startInput);
-    const end = await getCoords(endInput);
-
     if (!start || !end) {
-        alert("Градът не е намерен! Проверете името.");
-        return;
+        if (loader) loader.style.display = 'none';
+        return alert("Градовете не са намерени!");
     }
 
     try {
         const res = await fetch('/api/directions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                coordinates: [[start.lon, start.lat], [end.lon, end.lat]], 
-                transport 
-            })
+            body: JSON.stringify({ coordinates: [[start.lon, start.lat], [end.lon, end.lat]], transport })
         });
+        const routeData = await res.json();
+        if (loader) loader.style.display = 'none';
 
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-
-        // Чертане
+        // Рисуване на маршрута
         if (routeLayer) map.removeLayer(routeLayer);
-        routeLayer = L.geoJSON(data, { style: { color: '#2d6a4f', weight: 5 } }).addTo(map);
-        map.fitBounds(routeLayer.getBounds(), { padding: [40, 40] });
+        routeLayer = L.geoJSON(routeData.geometry, { style: { color: '#2d6a4f', weight: 6 } }).addTo(map);
+        map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
 
-        // Статистики и Време
-        const stats = data.features[0].properties.summary;
-        const distKm = stats.distance / 1000;
-        let durationSec = stats.duration;
+        // Статистики
+        const distKm = routeData.distance / 1000;
+        document.getElementById('distVal').innerText = Math.round(distKm);
 
-        // Корекция за колело (15 км/ч средно)
-        if (transport === 'bike') {
-            durationSec = (distKm / 15) * 3600;
-        } else {
-            durationSec = durationSec * 1.15; // +15% за трафик
-        }
-
+        let durationSec = (transport === 'bike') ? (distKm / 15) * 3600 : routeData.duration;
         const h = Math.floor(durationSec / 3600);
         const m = Math.floor((durationSec % 3600) / 60);
-        
-        document.getElementById('distVal').innerText = Math.round(distKm);
         document.getElementById('timeVal').innerText = h > 0 ? `${h}ч ${m}м` : `${m}м`;
 
-        // CO2
-        const factors = { 'car': 0.14, 'electric': 0.05, 'bus': 0.03, 'bike': 0 };
-        document.getElementById('co2Val').innerText = (distKm * factors[transport]).toFixed(1);
+        // Еко Метър & CO2 (Добавен автобус)
+        let co2PerKm = 0.19; // кола по подразбиране
+        let ecoScore = 25;
 
-        // Търсене на 10 обекта покрай пътя
-        fetchPOIs(data.features[0].geometry);
+        if (transport === 'bike') { co2PerKm = 0; ecoScore = 100; }
+        else if (transport === 'electric') { co2PerKm = 0.04; ecoScore = 85; }
+        else if (transport === 'bus') { co2PerKm = 0.07; ecoScore = 65; }
 
-    } catch (e) {
-        console.error("Грешка при маршрута:", e);
-        alert("Сървърът не отговаря. Опитайте пак.");
-    }
+        document.getElementById('co2Val').innerText = (distKm * co2PerKm).toFixed(1);
+        
+        const bar = document.getElementById('scoreBar');
+        if (bar) {
+            bar.style.width = ecoScore + '%';
+            bar.className = `progress-bar ${ecoScore > 60 ? 'bg-success' : ecoScore > 40 ? 'bg-warning' : 'bg-danger'}`;
+        }
+        document.getElementById('scoreText').innerText = ecoScore + '%';
+
+        // Викаме POIs
+        fetchPOIs(routeData.geometry);
+    } catch (e) { console.error(e); }
 }
 
-// 4. Търсене на обекти (Стриктен лимит 10)
 async function fetchPOIs(routeGeo) {
     const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => cb.value);
-    const list = document.getElementById('poiList');
-    if (!selected.length) return markersGroup.clearLayers();
-
-    list.innerHTML = '<p class="text-center small">Търся обекти... 🛰️</p>';
+    
+    // Ако нищо не е избрано, само чистим и излизаме
+    if (selected.length === 0) {
+        markersGroup.clearLayers();
+        document.getElementById('poiList').innerHTML = '<p class="text-muted small text-center">Изберете категория...</p>';
+        return;
+    }
 
     try {
         const res = await fetch('/api/pois', {
@@ -107,30 +85,59 @@ async function fetchPOIs(routeGeo) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ geometry: routeGeo, categories: selected })
         });
-        const data = await res.json();
+        const elements = await res.json();
         
         markersGroup.clearLayers();
+        const list = document.getElementById('poiList');
         list.innerHTML = '';
 
-        if (!data.features || data.features.length === 0) {
-            list.innerHTML = '<p class="text-center small">Няма открити обекти точно до пътя.</p>';
-            return;
-        }
+        elements.forEach(el => {
+            const coords = [el.lat, el.lon];
+            
+            // Динамичен цвят: Синьо за хотели, Оранжево за останалите
+            const color = el.tags.tourism === 'hotel' || el.tags.tourism === 'hostel' ? "#3498db" : "#e67e22";
 
-        data.features.forEach(poi => {
-            const c = [poi.geometry.coordinates[1], poi.geometry.coordinates[0]];
-            const div = document.createElement('div');
-            div.className = 'poi-item p-2 border-bottom small';
-            div.innerHTML = `<strong>${poi.properties.name}</strong><br><small>${poi.properties.type}</small>`;
-            div.onclick = () => map.flyTo(c, 15);
-            list.appendChild(div);
+            L.circleMarker(coords, { 
+                radius: 9, 
+                fillColor: color, 
+                color: "#fff", 
+                weight: 2, 
+                fillOpacity: 1 
+            }).addTo(markersGroup).bindPopup(`<b>${el.tags.name || "Обект"}</b><br><small>${el.tags.tourism || el.tags.amenity || ""}</small>`);
 
-            L.circleMarker(c, { radius: 6, fillColor: "#2d6a4f", color: "#fff", fillOpacity: 0.9 }).addTo(markersGroup).bindPopup(poi.properties.name);
+            const item = document.createElement('div');
+            item.className = 'poi-item';
+            item.innerHTML = `<strong>${el.tags.name || "Обект"}</strong>`;
+            item.onclick = () => map.flyTo(coords, 15);
+            list.appendChild(item);
         });
-    } catch (e) {
-        list.innerHTML = 'Грешка в обектите.';
-    }
+
+        if (elements.length === 0) {
+            list.innerHTML = '<p class="text-muted small text-center">Няма намерени обекти в този обхват.</p>';
+        }
+    } catch (e) { console.error("POI Fetch Error:", e); }
 }
 
-// Експониране за HTML бутона
+// Поправен слушател за филтрите
+document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('poi-check')) {
+        if (routeLayer) {
+            // Взимаме геометрията от слоя
+            const geo = routeLayer.toGeoJSON();
+            // Подаваме само geometry частта, за да е консистентно със сървъра
+            fetchPOIs(geo.features[0].geometry);
+        }
+    }
+});
+
+function toggleTheme() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    document.getElementById('map').classList.toggle('dark-map-filter', isDark);
+    
+    // Сменяме и иконата на бутона, ако я имаш
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
+}
+
 window.calculateRoute = calculateRoute;
+window.toggleTheme = toggleTheme;

@@ -34,19 +34,14 @@ body {
     padding: 20px;
     z-index: 1000;
     overflow-y: auto;
-    color: #000000;
-}
-
-body.dark-mode .sidebar {
-    color: #ffffff;
 }
 
 #map {
-    flex: 1;
-    height: 100vh;
-    width: 100%; /* Увери се, че заема цялата ширина */
-    background: #eee;
-    position: relative; /* Важно за правилното позициониране на плочките */
+    flex: 1; /* Заема оставащото място в wrapper-а */
+    height: 100vh; /* Заема цялата височина на екрана */
+    width: 100%;
+    background: #e5e3df; /* Светло сив фон, докато зареди */
+    display: block;
 }
 
 /* КАРТАТА - ТЪМЕН РЕЖИМ чрез CSS филтър */
@@ -113,26 +108,3 @@ body.dark-mode .sidebar {
 
 .stat-card strong { display: block; font-size: 1.2rem; color: var(--accent-green); }
 .stat-card small { font-size: 0.7rem; color: #888; text-transform: uppercase; }
-
-/* Theme-aware text colors */
-.sidebar h2,
-.sidebar h6,
-.sidebar p,
-.search-box,
-.search-box label,
-.box,
-.form-check-label,
-.poi-item {
-    color: #000000 !important;
-}
-
-body.dark-mode .sidebar h2,
-body.dark-mode .sidebar h6,
-body.dark-mode .sidebar p,
-body.dark-mode .search-box,
-body.dark-mode .search-box label,
-body.dark-mode .box,
-body.dark-mode .form-check-label,
-body.dark-mode .poi-item {
-    color: #ffffff !important;
-}
