@@ -101,7 +101,7 @@ function drawRoute(geoData) {
     routeLayer = L.geoJSON(geoData, { 
         style: { 
             // В тъмен режим #ff4500 (оранжево) след инверсия изглежда като наситено синьо/зелено
-            color: isDark ? '#0099ff' : '#22c55e',
+            color: isDark ? '#ff4500' : '#22c55e',
             weight: 6,
             opacity: 0.9,
             dashArray: '1, 10',
@@ -187,7 +187,7 @@ async function fetchPOIs(routeGeo) {
 
             L.circleMarker(c, { 
                 radius: 8, 
-                fillColor: "#3976e6", 
+                fillColor: "#39bee6", 
                 color: "#fff", 
                 weight: 2, 
                 fillOpacity: 1 

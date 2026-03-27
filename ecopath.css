@@ -102,3 +102,18 @@ body {
 
 .stat-card strong { display: block; font-size: 1.2rem; color: var(--accent-green); }
 .stat-card small { font-size: 0.7rem; color: #888; text-transform: uppercase; }
+
+/* Labels - black in light mode, white in dark mode */
+.box > h6,
+.search-box label,
+.sidebar > h6,
+.form-check-label {
+    color: #000000 !important;
+}
+
+body.dark-mode .box > h6,
+body.dark-mode .search-box label,
+body.dark-mode .sidebar > h6,
+body.dark-mode .form-check-label {
+    color: #ffffff !important;
+}
