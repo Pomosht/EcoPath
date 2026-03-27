@@ -1,105 +1,209 @@
-:root { 
-    --eco-green: #2d6a4f; 
-    --eco-light: #e8f5e9; 
-    --fast-red: #d90429;
+/* =========================================
+   1. VARIABLES & RESET
+   ========================================= */
+:root {
+    /* Colors */
+    --primary-green: #2d6a4f;
+    --secondary-green: #1b4332;
+    --accent-orange: #f39c12;
+    --light-bg: #f8f9fa;
+    --white: #ffffff;
+    --border-color: #dee2e6;
+    --text-main: #333333;
+    --text-muted: #6c757d;
+    
+    /* Dark Mode Colors */
+    --dark-bg: #1a1a1a;
+    --dark-surface: #2d2d2d;
+    --dark-input: #3d3d3d;
+    --dark-text: #eeeeee;
+    
+    /* Transitions */
+    --transition-speed: 0.3s;
 }
 
-body, html { 
-    margin: 0; 
+body, html {
+    margin: 0;
     padding: 0;
-    height: 100%; 
-    font-family: Arial, sans-serif; 
-    overflow: hidden; 
+    height: 100%;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    overflow: hidden;
 }
 
-.wrapper { 
-    display: flex; 
-    height: 100vh; 
+
+.wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
 }
 
-/* ЛЯВ ПАНЕЛ */
-.sidebar { 
-    width: 22vw; 
-    background-color: #f0f4f3; 
-    padding: 20px; 
-    box-sizing: border-box; 
-    border-right: 2px solid #ddd;
+#map {
+    flex: 1;
+    height: 100%;
+    z-index: 1;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 340px;
+    background: var(--light-bg);
+    padding: 24px;
+    border-right: 1px solid var(--border-color);
     z-index: 1001;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    transition: background var(--transition-speed), color var(--transition-speed);
 }
 
-.sidebar h2 { 
-    margin-top: 0; 
-    color: #2e7d32; 
-    font-weight: 800;
-}
+/* =========================================
+   3. COMPONENTS
+   ========================================= */
 
-/* Полета и Бутони */
+/* Search & Input Group */
 .search-box {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-}
-
-input.form-control { 
-    margin-bottom: 10px; 
-    border-radius: 6px; 
-}
-
-button.btn-route { 
-    width: 100%; 
-    padding: 10px; 
-    background-color: #2e7d32; 
-    color: white; 
-    border: none; 
-    border-radius: 6px; 
-    cursor: pointer; 
-    font-size: 16px; 
-    transition: 0.3s;
-}
-
-button:hover { background-color: #1b5e20; }
-
-/* Картички (Кутии) */
-.box { 
-    background: white; 
-    padding: 15px; 
-    margin-top: 15px; 
-    border-radius: 10px; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-}
-
-/* Статистика горе вдясно */
-.stats-overlay {
-    position: absolute; 
-    top: 20px; 
-    right: 20px; 
-    z-index: 1000;
-    background: white; 
-    padding: 15px 25px; 
+    background: var(--white);
+    padding: 16px;
     border-radius: 12px;
-    display: flex; 
-    gap: 30px; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
-/* Карта */
-#map { 
-    flex: 1; 
-    height: 100%; 
+.form-control, .form-select {
+    margin-bottom: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
 }
 
-/* Списък с обекти */
-.poi-item { 
-    font-size: 0.85rem; 
-    padding: 10px; 
-    border-bottom: 1px solid #eee; 
+/* Buttons */
+.btn-eco {
+    width: 100%;
+    background: var(--primary-green);
+    color: var(--white);
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background 0.2s ease;
     cursor: pointer;
-    background: white;
-    margin-top: 5px;
-    border-radius: 5px;
 }
-.poi-item:hover { background: var(--eco-light); }
 
-#loader { display: none; margin-top: 10px; text-align: center; color: var(--eco-green); font-weight: bold; }
+.btn-eco:hover {
+    background: var(--secondary-green);
+}
+
+/* POI Filter Grid */
+.poi-filters {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+}
+
+/* POI List Items */
+.poi-container {
+    flex: 1;
+    min-height: 200px;
+    border-radius: 8px;
+    background: #f1f3f5;
+}
+
+.poi-item {
+    font-size: 0.85rem;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    background: var(--white);
+    border-radius: 8px;
+    border-left: 5px solid var(--accent-orange);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    transition: transform 0.1s ease, background 0.2s;
+}
+
+.poi-item:hover {
+    transform: translateX(4px);
+    background: #fff9f0;
+}
+
+/* Floating Stats Overlay */
+.stats-overlay {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: var(--white);
+    padding: 15px 25px;
+    border-radius: 15px;
+    display: flex;
+    gap: 25px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.stat-card {
+    text-align: center;
+}
+
+.stat-card small {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.stat-card strong {
+    font-size: 1.2rem;
+    display: block;
+    color: var(--primary-green);
+}
+
+
+body.dark-mode {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+body.dark-mode .sidebar {
+    background: var(--dark-bg);
+    border-right-color: #333;
+}
+
+body.dark-mode .search-box, 
+body.dark-mode .poi-container, 
+body.dark-mode .poi-filters,
+body.dark-mode .stats-overlay {
+    background: var(--dark-surface) !important;
+    color: var(--dark-text);
+    border-color: #444;
+}
+
+body.dark-mode .form-control, 
+body.dark-mode .form-select {
+    background: var(--dark-input);
+    color: var(--white);
+    border-color: #555;
+}
+
+body.dark-mode .poi-item {
+    background: var(--dark-input);
+    color: var(--dark-text);
+    border-left-color: var(--accent-orange);
+}
+
+body.dark-mode .poi-item:hover {
+    background: #4a4a4a;
+}
+
+
+.progress {
+    background-color: #dee2e6;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#loader {
+    color: var(--primary-green);
+    font-weight: 500;
+}
