@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0=';
 
 var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
@@ -73,62 +72,6 @@ async function getCoords(city) {
     } catch(e) { return null; }
 }
 
-async function
-=======
-const API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImVlY2M5ZDQzYzg1OTQwYzBhMzUyNmMyMGQ2ZWY2MDNmIiwiaCI6Im11cm11cjY0In0=';
-
-var map = L.map('map', { zoomControl: false }).setView([42.6977, 23.3219], 7);
-var routeLayer = null;
-var markersGroup = L.layerGroup().addTo(map);
-
-// GEOGRAPHIC MAP TILES - Clean OpenStreetMap style
-const standardTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-});
-
-const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-});
-
-const topoTiles = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)'
-});
-
-// Default to standard geographic view
-standardTiles.addTo(map);
-
-// Theme Toggle functionality
-const themeBtn = document.getElementById('themeToggle');
-if (themeBtn) {
-    themeBtn.onclick = () => {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        themeBtn.innerHTML = isDark ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
-        
-        // Switch map tiles based on theme
-        if (isDark) {
-            map.removeLayer(standardTiles);
-            map.removeLayer(topoTiles);
-            darkTiles.addTo(map);
-        } else {
-            map.removeLayer(darkTiles);
-            standardTiles.addTo(map);
-        }
-    };
-}
-
-async function getCoords(city) {
-    try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`);
-        const data = await res.json();
-        return data[0] ? { lat: data[0].lat, lon: data[0].lon } : null;
-    } catch(e) { return null; }
-}
-
-// Calculate Route
 async function calculateRoute() {
     const loader = document.getElementById('loader');
     loader.style.display = 'block';
@@ -154,7 +97,6 @@ async function calculateRoute() {
         if (routeLayer) map.removeLayer(routeLayer);
         markersGroup.clearLayers();
 
-        // Route styling - green dashed line
         const isDark = document.body.classList.contains('dark-mode');
         routeLayer = L.geoJSON(data, { 
             style: { 
@@ -174,12 +116,10 @@ async function calculateRoute() {
         document.getElementById('distVal').innerText = Math.round(distKm);
         document.getElementById('timeVal').innerText = `${Math.floor(summary.duration/3600)}ч ${Math.floor((summary.duration%3600)/60)}м`;
 
-        // CO2 Calculation
-        let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.08 : transport === 'bike' ? 0 : 0.14;
+        let factor = transport === 'electric' ? 0.05 : transport === 'bus' ? 0.03 : transport === 'bike' ? 0 : 0.14;
         const co2 = distKm * factor;
         document.getElementById('co2Val').innerText = co2.toFixed(1);
 
-        // Eco Score
         let score = 100;
         if (transport !== 'bike') {
             score = 100 - (co2 * 2.5); 
@@ -193,7 +133,6 @@ async function calculateRoute() {
         bar.style.width = score + "%";
         scoreText.innerText = Math.round(score) + "%";
         
-        // Update badge color
         scoreText.className = score > 75 ? 'badge bg-success' : score > 40 ? 'badge bg-warning text-dark' : 'badge bg-danger';
         bar.className = score > 75 ? 'progress-bar bg-success' : score > 40 ? 'progress-bar bg-warning' : 'progress-bar bg-danger';
 
@@ -201,7 +140,6 @@ async function calculateRoute() {
     } catch (e) { console.error(e); } finally { loader.style.display = 'none'; }
 }
 
-// Fetch POIs
 async function fetchPOIs(routeGeo) {
     const selected = Array.from(document.querySelectorAll('.poi-check:checked')).map(cb => parseInt(cb.value));
     const list = document.getElementById('poiList');
@@ -233,7 +171,7 @@ async function fetchPOIs(routeGeo) {
         const data = await res.json();
         
         if (data.error || res.status === 400) {
-            list.innerHTML = '<p class="text-center text-danger small">Грешка в заявката (твърде дълъг път).</p>';
+            list.innerHTML = '<p class="text-center text-danger small">Грешка в заявката.</p>';
             return;
         }
 
@@ -241,7 +179,7 @@ async function fetchPOIs(routeGeo) {
         markersGroup.clearLayers();
         
         if (!data.features || data.features.length === 0) {
-            list.innerHTML = '<p class="text-muted small m-0 text-center">Няма обекти в този радиус.</p>';
+            list.innerHTML = '<p class="text-muted small m-0 text-center">Няма обекти.</p>';
             return;
         }
 
@@ -259,7 +197,6 @@ async function fetchPOIs(routeGeo) {
             };
             list.appendChild(div);
             
-            // Blue markers
             L.circleMarker(coords, { 
                 radius: 7, 
                 fillColor: "#3b82f6", 
@@ -270,7 +207,7 @@ async function fetchPOIs(routeGeo) {
         });
     } catch (e) { 
         console.error("POI Error:", e);
-        list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане на обекти.</p>';
+        list.innerHTML = '<p class="text-center text-danger small">Грешка при зареждане.</p>';
     }
 }
 
@@ -282,4 +219,3 @@ document.querySelectorAll('.poi-check').forEach(cb => {
         }
     };
 });
->>>>>>> fb045d714fc1b6511228987ced9bc6b0db50ef99
