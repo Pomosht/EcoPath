@@ -15,7 +15,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// 1. ГЕОКОДИРАНЕ (OSM Nominatim)
+// geokod
 app.get('/api/geocode', async (req, res) => {
     try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(req.query.q)}&limit=1`;
@@ -25,7 +25,7 @@ app.get('/api/geocode', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-// 2. МАРШРУТ (OSRM)
+// PATH finder s API
 app.post('/api/directions', async (req, res) => {
     try {
         const { coordinates, transport } = req.body;
@@ -38,7 +38,7 @@ app.post('/api/directions', async (req, res) => {
     } catch (e) { res.status(500).json({ error: 'Server error' }); }
 });
 
-// 3. ОБЕКТИ (Overpass API - Брониран вариант)
+// ALGORITHM FOR OBJECTS
 app.post('/api/pois', async (req, res) => {
     try {
         const { geometry, categories } = req.body;

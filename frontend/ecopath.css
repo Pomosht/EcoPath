@@ -173,6 +173,20 @@ body {
     .mobile-handle { display: none; }
 }
 
+/* В ecopath.css */
+.poi-container {
+    pointer-events: auto !important;
+}
+
+.poi-item {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.poi-item:hover {
+    background: var(--light-green) !important;
+}
+
 /* СТАТУС БАЛОНЧЕ */
 #status-bubble {
     display: none;
